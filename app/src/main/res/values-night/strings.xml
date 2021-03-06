@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="btc_address">BTC Address</string>
+    <string name="recipient_address">Recipient Address</string>
+    <string name="amount_in_btc">Amount in BTC</string>
+    <string name="starting_amount">0.0</string>
+    <string name="starting_balance">0.00 BTC</string>
+</resources>

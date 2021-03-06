@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation"
+    app:startDestination="@id/nav_dash">
+    <fragment
+        android:id="@+id/nav_receive"
+        android:name="com.example.kotlinbitcoinwallet.receive.ReceiveFragment"
+        android:label="Receive"
+        tools:layout="@layout/receive_fragment" />
+
+    <fragment
+        android:id="@+id/nav_send"
+        android:name="com.example.kotlinbitcoinwallet.send.SendFragment"
+        android:label="Send"
+        tools:layout="@layout/send_fragment" />
+    <fragment
+        android:id="@+id/nav_dash"
+        android:name="com.example.kotlinbitcoinwallet.dash.DashFragment"
+        android:label="Wallet"
+        tools:layout="@layout/dash_fragment" />
+
+</navigation>

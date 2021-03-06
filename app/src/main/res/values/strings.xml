@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">KotlinBitcoinWallet</string>
+    <string name="btc_address">BTC Address</string>
+    <string name="generate_address">Generate Address</string>
+    <string name="address_qr_code">Address QR Code</string>
+    <string name="scan_qr_code">Scan QR CODE</string>
+    <string name="recipient_address">Recipient Address</string>
+    <string name="amount_in_btc">Amount in BTC</string>
+    <string name="send_transaction">Send Transaction</string>
+    <string name="starting_amount">0.0</string>
+    <string name="starting_balance">0.00 BTC</string>
+    <string name="high_fee">HIGH</string>
+    <string name="medium_fee">MEDIUM</string>
+    <string name="low_fee">LOW</string>
+    <string name="fee_priority">Fee Priority:</string>
+</resources>
