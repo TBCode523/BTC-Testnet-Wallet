@@ -21,17 +21,14 @@ import com.google.common.base.Joiner
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
+import io.horizontalsystems.bitcoincore.core.IStorage
+import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.bitcoinj.core.BlockChain
-import org.bitcoinj.core.SegwitAddress
-import org.bitcoinj.script.Script
-import org.bitcoinj.wallet.DeterministicSeed
-import org.bitcoinj.wallet.Wallet
 
 class ReceiveFragment : Fragment() {
 
@@ -41,41 +38,44 @@ class ReceiveFragment : Fragment() {
     private lateinit var receiveTxt: TextView
     private lateinit var qrCode: ImageView
     private lateinit var generateBtn:Button
-    private  var  wallet: Wallet? = null
+    private lateinit var bitcoinKit: BitcoinKit
     private companion object{var walletNum: Int = 0}
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
 
         val root = inflater.inflate(R.layout.receive_fragment, container, false)
          receiveTxt = root.findViewById(R.id.tv_Receive)
 
          qrCode= root.findViewById(R.id.qr_code)
          generateBtn = root.findViewById(R.id.generate_btn)
-
+        viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
+        bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
         try {
-            wallet = (activity as MainActivity).getWallet()
-            receiveClick(false)
-           showAllAddresses(wallet!!)
+            receiveClick()
+          // showAllAddresses(bitcoinKit)
         }catch (e:Exception){
             Toast.makeText(context,"Wallet is Null",Toast.LENGTH_LONG).show()
         }
         generateBtn.setOnClickListener {
-            receiveClick(true)
+            receiveClick()
             }
 
         return root
     }
 
-    private fun receiveClick( isClicked: Boolean) {
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+    }
+    private fun receiveClick() {
         try {
-            var generatedAddress: String = viewModel.generateCurrentAddress(wallet!!)
+            val generatedAddress: String = viewModel.generateAddress(bitcoinKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
 
-            if(isClicked) generatedAddress = viewModel.generateNewAddress(wallet!!)
+     //       if(isClicked) generatedAddress = viewModel.generateNewAddress(wallet!!)
 
 
             CoroutineScope(IO).launch {
@@ -84,7 +84,7 @@ class ReceiveFragment : Fragment() {
             }
             //  viewModel.text = newAddress
             receiveTxt.text = generatedAddress
-            //sharedPreferences.edit().putString("Wallet #${walletNum++}", newAddress).apply()
+
             Log.v("Wallet", "Creating Wallet $walletNum")
             Toast.makeText(
                 this.context,
@@ -93,7 +93,7 @@ class ReceiveFragment : Fragment() {
             ).show()
 
         } catch (e: Exception) {
-            Toast.makeText(this.context, "Failed to Generate Address", Toast.LENGTH_SHORT)
+            Toast.makeText(this.context, "Failed to Generate Address: ${e.message}", Toast.LENGTH_SHORT)
                 .show()
         }
     }
@@ -125,29 +125,53 @@ class ReceiveFragment : Fragment() {
             setQRCode(bitmap)
 
         }
-   private fun showAllAddresses(wallet:Wallet){
-        val addresses = wallet.issuedReceiveAddresses
-        var str = "Balance: ${wallet.balance}"
-        for (address in addresses){
-            str+="\n"+ (address as SegwitAddress).toBech32()
-        }
-        for(word in wallet.keyChainSeed.mnemonicCode!!) {
-            str += "\n" + word
-        }
+    /* private fun showAllAddresses(wallet:Wallet){
+         val addresses = wallet.issuedReceiveAddresses
+         var str = "Balance: ${wallet.balance}"
+         for (address in addresses){
+             str+="\n"+ (address as SegwitAddress).toBech32()
+         }
+         for(word in wallet.keyChainSeed.mnemonicCode!!) {
+             str += "\n" + word
+         }
 
-        val alertDialog = AlertDialog.Builder(this.requireContext())
-            .setTitle("Used Addresses")
-            .setMessage(str)
-            .setPositiveButton("OK"){ _, _->
-
-
+         val alertDialog = AlertDialog.Builder(this.requireContext())
+             .setTitle("Used Addresses")
+             .setMessage(str)
+             .setPositiveButton("OK"){ _, _->
 
 
 
 
-            }.create()
-        alertDialog.show()
-    }
+
+
+             }.create()
+         alertDialog.show()
+     }
+    private fun showAllAddresses(bitcoinKit: BitcoinKit){
+
+         val addresses = bitcoinKit.receivePublicKey().used()
+         var str = "Balance: ${wallet.balance}"
+         for (address in addresses){
+             str+="\n"+ (address as SegwitAddress).toBech32()
+         }
+         for(word in wallet.keyChainSeed.mnemonicCode!!) {
+             str += "\n" + word
+         }
+
+         val alertDialog = AlertDialog.Builder(this.requireContext())
+             .setTitle("Used Addresses")
+             .setMessage(str)
+             .setPositiveButton("OK"){ _, _->
+
+
+
+
+
+
+             }.create()
+         alertDialog.show()
+     }*/
 
 
 }

@@ -7,9 +7,9 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import com.example.kotlinbitcoinwallet.R
-import org.bitcoinj.wallet.WalletTransaction
+import io.horizontalsystems.bitcoincore.models.TransactionInfo
 
-class TxAdapter(private var transactions: MutableList<WalletTransaction>) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
+class TxAdapter(private var transactions: List<TransactionInfo>?) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
 {
     inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         //TODO add more textViews regarding tx info
@@ -36,10 +36,13 @@ class TxAdapter(private var transactions: MutableList<WalletTransaction>) : Recy
     }
 
     override fun onBindViewHolder(holder: TxAdapter.ViewHolder, position: Int) {
-       holder.itemTitle.text = "${transactions[position].transaction.txId}   ${position+1}"
+       holder.itemTitle.text = "${transactions?.get(position)?.transactionHash}   ${position+1}"
     }
 
-    override fun getItemCount() = transactions.size
+    override fun getItemCount(): Int {
+        return if ( transactions == null) 0
+        else transactions!!.size
+    }
 
 
 

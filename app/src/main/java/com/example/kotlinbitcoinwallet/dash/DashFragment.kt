@@ -3,8 +3,6 @@ package com.example.kotlinbitcoinwallet.dash
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.util.Log
-import android.util.Log.DEBUG
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,12 +10,15 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlinbitcoinwallet.MainActivity
 import com.example.kotlinbitcoinwallet.R
-import org.bitcoinj.core.SegwitAddress
-import org.bitcoinj.wallet.Wallet
+import io.horizontalsystems.bitcoincore.BitcoinCore
+import io.horizontalsystems.bitcoinkit.BitcoinKit
+//import org.bitcoinj.core.SegwitAddress
+//import org.bitcoinj.wallet.Wallet
 
 class DashFragment : Fragment() {
 
@@ -27,7 +28,7 @@ class DashFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var txtBalance: TextView
     private lateinit var txtNoTransaction:TextView
-    private lateinit var wallet: Wallet
+    private lateinit var bitcoinKit: BitcoinKit
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,8 +40,8 @@ class DashFragment : Fragment() {
         txtNoTransaction = root.findViewById(R.id.tv_NoTransaction)
         txtNoTransaction.visibility = View.GONE
         try {
-            wallet = (activity as MainActivity).walletAppKit.wallet()
-
+         //   wallet = (activity as MainActivity).walletAppKit.wallet()
+         bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
 
         }catch (e:Exception){
             Toast.makeText(context,"Wallet is Null", Toast.LENGTH_LONG).show()
@@ -53,15 +54,24 @@ class DashFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
+
         //TODO keep a reference to the kits wallet even after destruction, then add listeners
+        viewModel.balance.observe(viewLifecycleOwner, Observer {
+            balance ->
+            when(balance){
+                null ->  txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
+                else-> txtBalance.text = SpannableStringBuilder("${balance.spendable} BTC")
+            }
+        })
 
 
-        txtBalance.text = SpannableStringBuilder(wallet.balance.toPlainString() + " BTC")
-        val txList = wallet.walletTransactions.toMutableList()
+        val txList =viewModel.transactions.value
         val adapter = TxAdapter(txList)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
-        if(txList.isEmpty()) txtNoTransaction.visibility = View.VISIBLE
+
+        if(txList?.isEmpty() == true) txtNoTransaction.visibility = View.VISIBLE
+
 
     }
     private fun populateAdapter(): MutableList<String>{
@@ -72,7 +82,7 @@ class DashFragment : Fragment() {
 
         return stringList
     }
-    private fun showAllAddresses(wallet:Wallet){
+ /*   private fun showAllAddresses(wallet:Wallet){
         val addresses = wallet.issuedReceiveAddresses
         var str = "Balance: ${wallet.balance}"
         for (address in addresses){
@@ -94,5 +104,5 @@ class DashFragment : Fragment() {
 
                 }.create()
         alertDialog.show()
-    }
+    }*/
 }

@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import org.bitcoinj.core.Coin
+//import org.bitcoinj.core.Coin
 import java.net.URL
 
 class SendViewModel : ViewModel() {

@@ -9,38 +9,45 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.example.kotlinbitcoinwallet.send.SendViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.common.base.Joiner
+import io.horizontalsystems.bitcoincore.BitcoinCore
+import io.horizontalsystems.bitcoincore.core.Bip
+import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import org.bitcoinj.core.ECKey
-import org.bitcoinj.core.PeerGroup
-import org.bitcoinj.kits.WalletAppKit
-import org.bitcoinj.params.TestNet3Params
-import org.bitcoinj.script.Script
-import org.bitcoinj.wallet.DeterministicSeed
-import org.bitcoinj.wallet.KeyChainGroupStructure
-import org.bitcoinj.wallet.Wallet
+
 import java.io.File
 import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     private val testNetKey ="testnet_phrase"
-    private var scriptType = Script.ScriptType.P2WPKH
-    private var networkParameter = TestNet3Params.get()
+    private lateinit var bitcoinKit : BitcoinKit
+    companion object {
 
-      lateinit var walletAppKit:WalletAppKit
+        val words = "used ugly meat glad balance divorce inner artwork hire invest already piano".split(" ")
+        private val walletId = "MyWallet"
+        private var networkType = BitcoinKit.NetworkType.TestNet
+        private var syncMode = BitcoinCore.SyncMode.Api()
+        private var bip = Bip.BIP44
 
 
+        fun setNetworkType(type: BitcoinKit.NetworkType){
+            networkType = type
+        }
 
+    }
+    lateinit var viewModel: MainViewModel
 //TODO use shared preferences to determine if a wallet has been created
     //private lateinit var sharedPreferences: SharedPreferences
 
@@ -57,33 +64,28 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
         try {
-            walletAppKit =   object: WalletAppKit(networkParameter,
-                    Script.ScriptType.P2WPKH, KeyChainGroupStructure.DEFAULT,filesDir,"btc-kit"){
-                override fun onSetupCompleted() {
-                    if (wallet().keyChainGroupSize < 1)
-                        wallet().importKey( ECKey())
-                    val chainFile = File(filesDir,"btc-kit.spvchain")
-                    val walletFile = File(filesDir,"btc-kit.wallet")
-                    val str = "Chain File exist?: ${chainFile.exists()} \n Wallet File exist?:${walletFile.exists()}\n " +
-                            "Chain FIle Path: ${chainFile.absolutePath}\nWallet Path ${walletFile.absolutePath} "
-                Log.w("BD", str)
 
-
+            bitcoinKit = BitcoinKit(this,words,walletId,networkType, syncMode = syncMode, bip = bip)
+            viewModel = ViewModelProvider(this, MainViewModelFactory(bitcoinKit)).get(MainViewModel::class.java)
+            viewModel.state.observe(this, androidx.lifecycle.Observer { state ->
+                when(state){
+                    is BitcoinCore.KitState.Synced -> {
+                        Log.d("btc-kit-sync", "SYNCED!")
+                    }
+                    is BitcoinCore.KitState.Syncing ->{
+                        Log.d("btc-kit-syncing", "syncing ${"%.3f".format(state.progress)}")
+                    }
+                    is BitcoinCore.KitState.ApiSyncing -> {
+                        Log.d("btc-kit-api","api syncing ${state.transactions} txs")
+                    }
+                    is BitcoinCore.KitState.NotSynced -> {
+                        Log.d("btc-kit-notsync","not synced ${state.exception.javaClass.simpleName}")
+                    }
                 }
+            })
 
-            }
-            Toast.makeText(this, "Syncing chain", Toast.LENGTH_LONG).show()
-
-            walletAppKit.setBlockingStartup(false).startAsync().awaitRunning(60,TimeUnit.SECONDS)
-            balanceDialog()
-            walletAppKit.wallet().addCoinsReceivedEventListener { wallet1, tx, prevBalance, newBalance ->
-                System.out.println("-----> coins resceived: " + tx.txId)
-                System.out.println("received: " + tx.getValue(wallet1))
-            }
-
-            Log.v("WB","Wallet Balance:${walletAppKit.wallet().balance.toPlainString()} BTC")
         }catch (e:Exception) {
-            Toast.makeText(this,"Oh Naaah: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
 
 
@@ -91,19 +93,12 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    override fun onStart() {
 
-        super.onStart()
-
-
-
-    }
 
 
     override fun onDestroy() {
 
-        walletAppKit.stopAsync()
-        walletAppKit.awaitTerminated()
+
         super.onDestroy()
     }
 
@@ -114,8 +109,8 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("OK"){ _, _->
 
 
-               val wallet = walletAppKit.wallet()
-                val mnemonicCode =   wallet?.keyChainSeed?.mnemonicCode
+
+
        //     sharedPreferences.edit().putString(testNetKey, Joiner.on(" ").join(mnemonicCode)).apply()
 
 
@@ -145,10 +140,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun balanceDialog(){
-        var str = "Creation-Time:${walletAppKit.wallet().earliestKeyCreationTime} \n" + "AppKit Running: ${walletAppKit.isRunning}\n"+
-                " File Directory:${walletAppKit.directory().canonicalPath}\nTransactions:\n"
+        /*
+        var str = "Creation-Time:${} \n" + "AppKit Running: ${}\n"+
+                " File Directory:${}\nTransactions:\n"
         try {
-    for(x in walletAppKit.wallet().transactionsByTime){
+    for(x in bitcoinKit.tr){
         str+="${x.txId}\n"
     }
             str+="Peer # and running:${walletAppKit.peerGroup().numConnectedPeers()} ${walletAppKit.peerGroup().isRunning}\n"
@@ -171,6 +167,8 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this,"Seed retrieval failed!", Toast.LENGTH_SHORT).show()
             e.message?.let { errorDialog(it) }
         }
+
+         */
     }
     private fun errorDialog(errorMsg:String){
         try {
@@ -191,27 +189,9 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this,"Seed retrieval failed!", Toast.LENGTH_SHORT).show()
         }
     }
-    private fun generateWalletAppKit():WalletAppKit{
-        return  object: WalletAppKit(networkParameter,
-                Script.ScriptType.P2WPKH, KeyChainGroupStructure.DEFAULT,filesDir,"btc-kit"){
-            override fun onSetupCompleted() {
-                if (wallet().keyChainGroupSize < 1)
-                    wallet().importKey( ECKey())
 
-                walletAppKit.wallet().addCoinsReceivedEventListener { wallet1, tx, prevBalance, newBalance ->
-                    System.out.println("-----> coins resceived: " + tx.txId)
-                    System.out.println("received: " + tx.getValue(wallet1))
-                }
+ //   fun getViewModelBTCKit(): BitcoinKit = viewModel.bitcoinKit
+    fun getBTCKit(): BitcoinKit = bitcoinKit
 
-
-
-            }
-        }
-    }
-
-    fun getScriptType() = scriptType
-    fun getNetworkParameters() = networkParameter
-    fun getWallet(): Wallet = walletAppKit.wallet()
-    fun getPeerGroup():PeerGroup = walletAppKit.peerGroup()
 
 }
