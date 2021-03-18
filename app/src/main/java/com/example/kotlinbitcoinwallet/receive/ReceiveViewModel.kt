@@ -12,19 +12,7 @@ class ReceiveViewModel : ViewModel() {
         currentAddressString = bitcoinKit.receiveAddress()
         return  currentAddressString
     }
-    /*
 
-    fun generateNewAddress(wallet: Wallet):String{
-        currentAddress = wallet.freshReceiveAddress()
-        currentAddressString = (currentAddress as SegwitAddress).toBech32()
-        return  currentAddressString
-    }
-
-    fun generateCurrentAddress(wallet: Wallet):String{
-        currentAddress = wallet.currentReceiveAddress()
-        currentAddressString = (currentAddress as SegwitAddress).toBech32()
-        return  currentAddressString
-    }*/
     //Returns a random string for testing
     private fun generateRandomString(length: Int):String{
         val charset = ('a'..'z') + ('A'..'Z') + ('0'..'1')

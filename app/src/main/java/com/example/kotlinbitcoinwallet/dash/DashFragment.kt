@@ -20,7 +20,7 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 //import org.bitcoinj.core.SegwitAddress
 //import org.bitcoinj.wallet.Wallet
 
-class DashFragment : Fragment() {
+class DashFragment : Fragment(){
 
 
 
@@ -29,6 +29,7 @@ class DashFragment : Fragment() {
     private lateinit var txtBalance: TextView
     private lateinit var txtNoTransaction:TextView
     private lateinit var bitcoinKit: BitcoinKit
+    private lateinit var adapter: TxAdapter
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,12 +40,19 @@ class DashFragment : Fragment() {
         txtBalance = root.findViewById(R.id.tv_Balance)
         txtNoTransaction = root.findViewById(R.id.tv_NoTransaction)
         txtNoTransaction.visibility = View.GONE
+
         try {
          //   wallet = (activity as MainActivity).walletAppKit.wallet()
          bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
+            viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
+
+            //TODO keep a reference to the kits wallet even after destruction, then add listeners
+            viewModel.getBalance(bitcoinKit)
+            viewModel.getTransactions(bitcoinKit)
+
 
         }catch (e:Exception){
-            Toast.makeText(context,"Wallet is Null", Toast.LENGTH_LONG).show()
+            Toast.makeText(context,"${e.message}", Toast.LENGTH_LONG).show()
         }
         return root
     }
@@ -53,9 +61,7 @@ class DashFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
 
-        //TODO keep a reference to the kits wallet even after destruction, then add listeners
         viewModel.balance.observe(viewLifecycleOwner, Observer {
             balance ->
             when(balance){
@@ -63,14 +69,19 @@ class DashFragment : Fragment() {
                 else-> txtBalance.text = SpannableStringBuilder("${balance.spendable} BTC")
             }
         })
+        viewModel.transactions.observe(viewLifecycleOwner, Observer {
+            it?.let { transactions ->
+                if(adapter?.itemCount == 0) txtNoTransaction.visibility = View.VISIBLE
+               adapter.transactions = transactions
+                adapter.notifyDataSetChanged()
+            }
+        })
 
-
-        val txList =viewModel.transactions.value
-        val adapter = TxAdapter(txList)
+        adapter = TxAdapter(viewModel.transactions.value)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
 
-        if(txList?.isEmpty() == true) txtNoTransaction.visibility = View.VISIBLE
+
 
 
     }

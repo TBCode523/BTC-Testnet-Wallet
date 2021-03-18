@@ -9,7 +9,7 @@ import android.widget.Toast
 import com.example.kotlinbitcoinwallet.R
 import io.horizontalsystems.bitcoincore.models.TransactionInfo
 
-class TxAdapter(private var transactions: List<TransactionInfo>?) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
+class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
 {
     inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         //TODO add more textViews regarding tx info
