@@ -14,6 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlinbitcoinwallet.MainActivity
+import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.example.kotlinbitcoinwallet.R
 import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoinkit.BitcoinKit
@@ -30,6 +31,7 @@ class DashFragment : Fragment(){
     private lateinit var txtNoTransaction:TextView
     private lateinit var bitcoinKit: BitcoinKit
     private lateinit var adapter: TxAdapter
+    val SATS = 100000000.00
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -66,7 +68,7 @@ class DashFragment : Fragment(){
             balance ->
             when(balance){
                 null ->  txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
-                else-> txtBalance.text = SpannableStringBuilder("${balance.spendable} BTC")
+                else-> txtBalance.text = SpannableStringBuilder("${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} BTC")
             }
         })
         viewModel.transactions.observe(viewLifecycleOwner, Observer {

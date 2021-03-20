@@ -1,17 +1,17 @@
 import com.google.gson.annotations.SerializedName
 
-data class FeePriority(
+data  class FeePriority(
+
     @SerializedName("fastestFee")
-    var highFee: Long,
+    var highFee: Int,
     @SerializedName("hourFee")
-    var medFee:Long,
+    var medFee:Int,
     @SerializedName("minimumFee")
-    var lowFee:Long ){
+    var lowFee:Int ){
 
     override fun toString(): String {
         return "Low Fee: $lowFee \t Med Fee: $medFee \t High Fee: $highFee"
     }
-    fun gethighFee(): Long{
-        return highFee
-    }
+
+
 }

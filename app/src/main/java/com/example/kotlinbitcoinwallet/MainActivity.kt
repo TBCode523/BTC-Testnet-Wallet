@@ -67,10 +67,12 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
             bitcoinKit = BitcoinKit(this,words,walletId,networkType, syncMode = syncMode, bip = bip)
             viewModel = ViewModelProvider(this, MainViewModelFactory(bitcoinKit)).get(MainViewModel::class.java)
+            Toast.makeText(this,"Syncing",Toast.LENGTH_SHORT).show()
             viewModel.state.observe(this, androidx.lifecycle.Observer { state ->
                 when(state){
                     is BitcoinCore.KitState.Synced -> {
                         Log.d("btc-kit-sync", "SYNCED!")
+                        Toast.makeText(this,"Synced",Toast.LENGTH_SHORT).show()
                     }
                     is BitcoinCore.KitState.Syncing ->{
                         Log.d("btc-kit-syncing", "syncing ${"%.3f".format(state.progress)}")
