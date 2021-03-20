@@ -40,7 +40,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var amountTxt:EditText
     private lateinit var scanBtn:Button
     private lateinit var sendBtn:Button
-
     private lateinit var bitcoinKit: BitcoinKit
     private lateinit var feeTxt: TextView
     private lateinit var txIDTxt:TextView
@@ -146,7 +145,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         return addy
     }
        private fun confirmDialogue(){
-    //TODO COMPLETE CONFIRM DIALOGUE
          try {
              val sats = 100000000
              val sendAddress = StringBuilder(sendTxt.text).toString()
@@ -183,7 +181,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
              Toast.makeText(context, "${e.message}", Toast.LENGTH_SHORT).show()
          }
      }
-     //TODO COMPLETE SENDTRANSACTION
    private fun sentDialogue(txInfo: ByteArray){
          val alertDialog = AlertDialog.Builder(this.requireContext())
              .setTitle("TRANSACTION SENT!")

@@ -35,7 +35,6 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
     private lateinit var bitcoinKit : BitcoinKit
     companion object {
 
-        val words = "used ugly meat glad balance divorce inner artwork hire invest already piano".split(" ")
         private val walletId = "MyWallet"
         private var networkType = BitcoinKit.NetworkType.TestNet
         private var syncMode = BitcoinCore.SyncMode.Api()
@@ -64,7 +63,8 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         navView.setupWithNavController(navController)
 
         try {
-
+            //TODO use sharedpref to store seed phrase
+            val words = "used ugly meat glad balance divorce inner artwork hire invest already piano".split(" ")
             bitcoinKit = BitcoinKit(this,words,walletId,networkType, syncMode = syncMode, bip = bip)
             viewModel = ViewModelProvider(this, MainViewModelFactory(bitcoinKit)).get(MainViewModel::class.java)
             Toast.makeText(this,"Syncing",Toast.LENGTH_SHORT).show()
