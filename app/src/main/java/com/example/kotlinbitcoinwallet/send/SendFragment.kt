@@ -17,11 +17,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.getSystemService
 import com.example.kotlinbitcoinwallet.MainActivity
 import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.example.kotlinbitcoinwallet.R
-import com.example.kotlinbitcoinwallet.dash.DashFragment
 import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
@@ -170,7 +168,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                      .setPositiveButton("SEND") { _, _ ->
                          try {
                           val tx= bitcoinKit.send(sendAddress,amountToLong,feeRate=feeRate,sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
-                            sentDialogue(tx.header.uid)
+                            sentDialogue(tx.header.hash)
                          } catch (e:Exception){
                              Toast.makeText(this.requireContext(), "Transaction Request Failed", Toast.LENGTH_SHORT).show()
                          }
@@ -186,25 +184,27 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
          }
      }
      //TODO COMPLETE SENDTRANSACTION
-   private fun sentDialogue(txInfo:String){
+   private fun sentDialogue(txInfo: ByteArray){
          val alertDialog = AlertDialog.Builder(this.requireContext())
-             .setTitle("Transaction has been sent!")
-             .setMessage("TXID:$txInfo\n New Balance:${NumberFormatHelper.cryptoAmountFormat.format( bitcoinKit.balance.spendable/ 100_000_000.0)} ")
-             .setPositiveButton("OPEN BLOCK-EXPLORER") { _, _ ->
-                 try {
+             .setTitle("TRANSACTION SENT!")
+             .setMessage("New Balance:${NumberFormatHelper.cryptoAmountFormat.format( bitcoinKit.balance.spendable/ 100_000_000.0)}" +
+                     "\nCheck your dash to see your new transaction!")
+             .setPositiveButton("OK") { _, _ ->
+
+               /*  try {
                      val uriStr = "https://mempool.space/testnet/tx/"
                      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr+txInfo))
                      startActivity(intent)
                  } catch (e:Exception){
                      Toast.makeText(this.requireContext(), "Transaction Request Failed", Toast.LENGTH_SHORT).show()
                  }
+                    */
 
-
-             }
-             .setNegativeButton("COPY TX-ID") { _, _ ->
+             }.create()
+           /*  .setNegativeButton("COPY TX-ID") { _, _ ->
                  val clipBoard = this.activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                clipBoard.setPrimaryClip( ClipData.newPlainText("TX-ID", txInfo))
-             }.create()
+             }.create()*/
          alertDialog.show()
 
 
