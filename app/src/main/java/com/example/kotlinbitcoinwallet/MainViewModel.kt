@@ -16,15 +16,23 @@ class MainViewModel(val bitcoinKit: BitcoinKit): ViewModel(), BitcoinKit.Listene
 //val words = "used ugly meat glad balance divorce inner artwork hire invest already piano".split(" ")
     //val bitcoinKit = BitcoinKit(this,words,"MyWallet",BitcoinKit.NetworkType.TestNet, BitcoinCore.SyncMode.Api(),  Bip.BIP44)
     val state = MutableLiveData<BitcoinCore.KitState>()
+    private var started = false
     init{
-        bitcoinKit.start()
+        start()
         bitcoinKit.listener = this
       //  bitcoinKit.syncState
 
      //   state.observe()
 
     }
+    private fun start() {
+        if (started) return
+        else{
+            started =true
+            bitcoinKit.start()
 
+        }
+    }
     override fun onTransactionsUpdate(
         inserted: List<TransactionInfo>,
         updated: List<TransactionInfo>

@@ -17,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.doOnTextChanged
 import com.example.kotlinbitcoinwallet.MainActivity
 import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.example.kotlinbitcoinwallet.R
@@ -24,6 +25,7 @@ import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
 import io.horizontalsystems.bitcoincore.core.IPluginData
+import io.horizontalsystems.bitcoincore.managers.SendValueErrors
 import io.horizontalsystems.bitcoincore.models.TransactionDataSortType
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.CoroutineScope
@@ -44,6 +46,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var feeTxt: TextView
     private lateinit var txIDTxt:TextView
     private lateinit var feePriority: FeePriority
+    private lateinit var fee_Rate: SendViewModel.FEE_RATE
     private  var feeRate:Int = 0
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,14 +62,17 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         txIDTxt = root.findViewById(R.id.tv_txID)
 
 
-        viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
+
         bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
+        viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
+        fee_Rate = SendViewModel.FEE_RATE.MED
         CoroutineScope(IO).launch {
+
             feePriority = generateFeePriority("https://mempool.space/api/v1/fees/recommended")
-            feeRate = feePriority.medFee
+            feeRate = feeRate
 
         }
-        feeTxt.text = feeRate.toString()
+
         return root
     }
 
@@ -75,8 +81,9 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        feeTxt.text = "Choose your fee"
-
+        feeTxt.text = "${fee_Rate.name} ${viewModel.formattedFee}"
+        sendTxt.text =SpannableStringBuilder( viewModel.sendAddress)
+        amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
 
 
         scanBtn.setOnClickListener{
@@ -93,7 +100,16 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     feeTxt.setOnClickListener{
         feePopup(feeTxt)
     }
-       
+        sendTxt.doOnTextChanged { text, _, _, _ -> viewModel.sendAddress =
+            text.toString()
+        }
+       amountTxt.doOnTextChanged { text, _, _, _ ->
+           viewModel.amount = (text.toString().toDouble() * viewModel.sats).toLong()
+           Log.d("SF", "Amount changed to: ${viewModel.amount}")
+           viewModel.generateFee(bitcoinKit, fee_Rate)
+
+           feeTxt.text = "${fee_Rate.name} ${viewModel.formattedFee}"
+       }
 
     }
     private fun scanQRCode(){
@@ -146,29 +162,31 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     }
        private fun confirmDialogue(){
          try {
-             val sats = 100000000
+          /*   val sats = 100000000
              val sendAddress = StringBuilder(sendTxt.text).toString()
              val amount = StringBuilder(amountTxt.text).toString()
              val amountToLong = (amount.toDouble() * sats).toLong()
              val fee = generateFee(amountToLong)
-             val sendAddressStr: String = "To: " + StringBuilder(sendTxt.text).toString()
+             */
             // val amountFormatted = NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)
 
-             val formattedFee = NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
-             val formattedAmount = NumberFormatHelper.cryptoAmountFormat.format( amountToLong/ 100_000_000.0)
-             val formattedTotal =  NumberFormatHelper.cryptoAmountFormat.format( (fee+amountToLong)/ 100_000_000.0)
-             val amountStr: String = "Amount: $formattedAmount BTC"
-             val feeStr = "Fee: $formattedFee BTC"
-             val finalStr = "Final Amount: $formattedTotal BTC"
+             val sendAddressStr: String = "To: " + viewModel.sendAddress
+             val amountStr = "Amount: ${viewModel.formatAmount()} BTC"
+             val feeStr = "Fee: ${viewModel.formatFee()}"
+             val finalStr = "Final Amount: ${viewModel.formatTotal()}"
              val alertDialog = AlertDialog.Builder(this.requireContext())
                      .setTitle("Confirm Your Request")
                      .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr ")
                      .setPositiveButton("SEND") { _, _ ->
                          try {
-                          val tx= bitcoinKit.send(sendAddress,amountToLong,feeRate=feeRate,sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
+                             Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(fee_Rate)}(${fee_Rate.name})")
+                          val tx= bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(fee_Rate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
                             sentDialogue(tx.header.hash)
+                         } catch (e:SendValueErrors.Dust){
+                             Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
                          } catch (e:Exception){
-                             Toast.makeText(this.requireContext(), "Transaction Request Failed", Toast.LENGTH_SHORT).show()
+                             Toast.makeText(this.requireContext(), "Transaction Request Failed: ${e.message}", Toast.LENGTH_LONG).show()
+
                          }
 
 
@@ -216,28 +234,33 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
        when(item!!.itemId){
            R.id.high_fee ->{
-               feeRate = feePriority.highFee
-               feeTxt.text = SpannableStringBuilder("${item.title} ${NumberFormatHelper.cryptoAmountFormat.format( feeRate/ 100_000_000.0)} BTC")
+               fee_Rate = SendViewModel.FEE_RATE.HIGH
+               viewModel.generateFee(bitcoinKit, fee_Rate)
+               feeTxt.text = SpannableStringBuilder("${fee_Rate.name} ${viewModel.formatFee()}")
                return true
            }
            R.id.low_fee ->{
-               feeRate = feePriority.medFee
-               feeTxt.text = SpannableStringBuilder("${item.title} ${NumberFormatHelper.cryptoAmountFormat.format( feeRate/ 100_000_000.0)} BTC")
+               fee_Rate = SendViewModel.FEE_RATE.LOW
+               viewModel.generateFee(bitcoinKit, fee_Rate)
+               feeTxt.text = SpannableStringBuilder("${fee_Rate.name} ${viewModel.formatFee()}")
                return true
            }
            R.id.med_fee -> {
-               feeRate = feePriority.medFee
-                feeTxt.text = SpannableStringBuilder("${item.title} ${NumberFormatHelper.cryptoAmountFormat.format( feeRate/ 100_000_000.0)} BTC")
+               fee_Rate = SendViewModel.FEE_RATE.MED
+               viewModel.generateFee(bitcoinKit,fee_Rate)
+               feeTxt.text = SpannableStringBuilder("${fee_Rate.name} ${viewModel.formatFee()}")
                 return true
            }
            else -> {
                return false
            }
 
+
        }
 
 
     }
+
 
     private fun generateFeePriority(feeUrl: String): FeePriority {
         val response = URL(feeUrl).readText()
@@ -247,5 +270,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private fun generateFee(value: Long, address: String? = null): Long {
         return bitcoinKit.fee(value, address, feeRate = feeRate)
     }
+
 
 }

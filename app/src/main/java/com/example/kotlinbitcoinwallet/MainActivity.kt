@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     private val testNetKey ="testnet_phrase"
+    private val SEED_PHRASE = "seed_phrase"
     private lateinit var bitcoinKit : BitcoinKit
     companion object {
 
@@ -48,7 +49,7 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
     }
     lateinit var viewModel: MainViewModel
 //TODO use shared preferences to determine if a wallet has been created
-    //private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var sharedPref: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,11 +64,10 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         navView.setupWithNavController(navController)
 
         try {
-            //TODO use sharedpref to store seed phrase
+         //       sharedPref = this.getSharedPreferences()
             val words = "used ugly meat glad balance divorce inner artwork hire invest already piano".split(" ")
             bitcoinKit = BitcoinKit(this,words,walletId,networkType, syncMode = syncMode, bip = bip)
             viewModel = ViewModelProvider(this, MainViewModelFactory(bitcoinKit)).get(MainViewModel::class.java)
-            Toast.makeText(this,"Syncing",Toast.LENGTH_SHORT).show()
             viewModel.state.observe(this, androidx.lifecycle.Observer { state ->
                 when(state){
                     is BitcoinCore.KitState.Synced -> {

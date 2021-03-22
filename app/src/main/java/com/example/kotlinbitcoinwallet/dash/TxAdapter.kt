@@ -14,13 +14,12 @@ import androidx.core.content.ContextCompat.startActivity
 import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.example.kotlinbitcoinwallet.R
 import io.horizontalsystems.bitcoincore.models.TransactionInfo
+import io.horizontalsystems.bitcoincore.models.TransactionStatus
 import java.text.DateFormat
 import java.util.*
 
 class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
 {
- //   val SATS = 100000000.00
-   // var isPositive = true
     inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.tv_date)
         val amount: TextView = itemView.findViewById(R.id.tv_amount)
@@ -52,9 +51,11 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
     override fun onBindViewHolder(holder: TxAdapter.ViewHolder, position: Int) {
         val amount = transactions?.get(position)?.let { calculateAmount(it) }!!
         val date = transactions?.get(position)?.timestamp?.let { formatDate(it) }
-       holder.date.text = "$date"
+        if(transactions?.get(position)?.status == TransactionStatus.INVALID)
+       holder.date.text = "Invalid"
+        else holder.date.text = "$date"
 
-        holder.amount.text = "${ NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)}BTC"
+        holder.amount.text = "${NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)} BTC"
 
         if(amount > 0){holder.img.setImageResource(R.drawable.ic_receive)}
         else holder.img.setImageResource(R.drawable.ic_send)
@@ -83,6 +84,7 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
     }
 
     private fun formatDate(timestamp: Long): String {
+
         return DateFormat.getInstance().format(Date(timestamp * 1000))
     }
 
