@@ -17,8 +17,12 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.kotlinbitcoinwallet.send.SendViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.common.base.Joiner
+import io.github.novacrypto.bip39.MnemonicGenerator
+import io.github.novacrypto.bip39.Words
+import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoincore.core.Bip
+import io.horizontalsystems.bitcoincore.core.Wallet
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -31,15 +35,14 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
-    private val testNetKey ="testnet_phrase"
-    private val SEED_PHRASE = "seed_phrase"
+
     private lateinit var bitcoinKit : BitcoinKit
     companion object {
 
         private val walletId = "MyWallet"
         private var networkType = BitcoinKit.NetworkType.TestNet
         private var syncMode = BitcoinCore.SyncMode.Api()
-        private var bip = Bip.BIP44
+        private var bip = Bip.BIP84
 
 
         fun setNetworkType(type: BitcoinKit.NetworkType){
@@ -48,7 +51,6 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     }
     lateinit var viewModel: MainViewModel
-//TODO use shared preferences to determine if a wallet has been created
     private lateinit var sharedPref: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,17 +66,21 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         navView.setupWithNavController(navController)
 
         try {
-         //       sharedPref = this.getSharedPreferences()
-            val words = "used ugly meat glad balance divorce inner artwork hire invest already piano".split(" ")
-            bitcoinKit = BitcoinKit(this,words,walletId,networkType, syncMode = syncMode, bip = bip)
-            viewModel = ViewModelProvider(this, MainViewModelFactory(bitcoinKit)).get(MainViewModel::class.java)
-            viewModel.state.observe(this, androidx.lifecycle.Observer { state ->
+               sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
+
+            if(!sharedPref.contains(walletId)) btcDialog()
+            val words = sharedPref.getString(walletId,null)?.split(" ")
+            Log.d("btc-db","Seed Phrase: ${sharedPref.getString(walletId,"")}")
+            bitcoinKit = BitcoinKit(this,words!!,walletId,networkType, syncMode = syncMode, bip = bip)
+            viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
+            viewModel.state.observe(this, { state ->
                 when(state){
                     is BitcoinCore.KitState.Synced -> {
                         Log.d("btc-kit-sync", "SYNCED!")
                         Toast.makeText(this,"Synced",Toast.LENGTH_SHORT).show()
                     }
                     is BitcoinCore.KitState.Syncing ->{
+                        Toast.makeText(this,"Syncing",Toast.LENGTH_SHORT).show()
                         Log.d("btc-kit-syncing", "syncing ${"%.3f".format(state.progress)}")
                     }
                     is BitcoinCore.KitState.ApiSyncing -> {
@@ -95,16 +101,17 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     }
 
-
-
-
-    override fun onDestroy() {
-
-
-        super.onDestroy()
+    override fun onStop() {
+        super.onStop()
+        viewModel.stop()
     }
-
     private fun btcDialog(){
+        val sb = StringBuilder()
+        val entropy = ByteArray(Words.TWELVE.byteLength())
+        SecureRandom().nextBytes(entropy)
+        MnemonicGenerator(English.INSTANCE)
+                .createMnemonic(entropy, sb::append)
+        sharedPref.edit().putString(walletId, sb.toString()).apply()
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("No Wallet found")
             .setMessage("You don't have a wallet yet we'll create one for you!")
@@ -112,25 +119,21 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
 
 
-
-       //     sharedPreferences.edit().putString(testNetKey, Joiner.on(" ").join(mnemonicCode)).apply()
-
-
-                seedDialog()
+                seedDialog(sb.toString())
             }.create()
         alertDialog.show()
 
     }
-    private fun seedDialog(){
+    private fun seedDialog(seed:String){
         try {
 
 
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("Seed Phrase Generated")
-            .setMessage("Your seed phrase is: \n " +
-                    "Make sure to write it down or back it up!")
+            .setMessage("Your seed phrase is: \n $seed \n" +
+                    "Make sure to write it down or back it up somewhere!")
             .setPositiveButton("OK I wrote it down"){ _, _->
-
+                Toast.makeText(this,"You won't be able to send transactions until we're synced.(~2-5 min.)", Toast.LENGTH_SHORT).show()
 
 
 
@@ -140,60 +143,9 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         } catch (e:Exception){
             Toast.makeText(this,"Seed retrieval failed!", Toast.LENGTH_SHORT).show()
         }
-    }
-    private fun balanceDialog(){
-        /*
-        var str = "Creation-Time:${} \n" + "AppKit Running: ${}\n"+
-                " File Directory:${}\nTransactions:\n"
-        try {
-    for(x in bitcoinKit.tr){
-        str+="${x.txId}\n"
-    }
-            str+="Peer # and running:${walletAppKit.peerGroup().numConnectedPeers()} ${walletAppKit.peerGroup().isRunning}\n"
-            str+="Chain Height: ${walletAppKit.chain().chainHead.height}\n"
-            str+="Balance: ${walletAppKit.wallet().balance.toPlainString() } BTC Received: ${walletAppKit.wallet().totalReceived.toPlainString() } BTC Sent: ${walletAppKit.wallet().totalSent.toPlainString() } BTC\n"
-            str+="Directory Status: ${walletAppKit.directory().totalSpace} bytes\n Can Read File?:${walletAppKit.directory().canRead()} Can Write File?:${walletAppKit.directory().canWrite()}"
-            Log.w("BD",str)
-            val alertDialog = AlertDialog.Builder(this)
-                    .setTitle("Summary")
-                    .setMessage(str)
-                    .setPositiveButton("OK"){ _, _->
 
-
-
-
-
-                    }.create()
-            alertDialog.show()
-        } catch (e:Exception){
-            Toast.makeText(this,"Seed retrieval failed!", Toast.LENGTH_SHORT).show()
-            e.message?.let { errorDialog(it) }
-        }
-
-         */
-    }
-    private fun errorDialog(errorMsg:String){
-        try {
-
-
-            val alertDialog = AlertDialog.Builder(this)
-                    .setTitle("ERROR")
-                    .setMessage("EXCEPTION WAS THROWN:${errorMsg} ")
-                    .setPositiveButton("OK"){ _, _->
-
-
-
-
-
-                    }.create()
-            alertDialog.show()
-        } catch (e:Exception){
-            Toast.makeText(this,"Seed retrieval failed!", Toast.LENGTH_SHORT).show()
-        }
     }
 
- //   fun getViewModelBTCKit(): BitcoinKit = viewModel.bitcoinKit
-    fun getBTCKit(): BitcoinKit = bitcoinKit
 
 
 }

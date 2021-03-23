@@ -14,7 +14,7 @@
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:layout_margin="20dp"
-           android:contentDescription="Sent or Recieve"
+           android:contentDescription="@string/sent_or_recieve"
            android:src="@mipmap/ic_launcher"
            app:layout_constraintBottom_toBottomOf="parent"
            app:layout_constraintStart_toStartOf="parent"
@@ -24,7 +24,7 @@
            android:id="@+id/tv_date"
            android:layout_width="wrap_content"
            android:layout_height="match_parent"
-           android:text="III"
+           android:text="@string/example_text"
            app:layout_constraintBottom_toTopOf="@+id/img_recieve_send"
            app:layout_constraintStart_toStartOf="parent" />
 
@@ -32,7 +32,7 @@
            android:id="@+id/tv_amount"
            android:layout_width="wrap_content"
            android:layout_height="match_parent"
-           android:text="III"
+           android:text="@string/example_text"
            app:layout_constraintBottom_toBottomOf="parent"
            app:layout_constraintEnd_toEndOf="parent"
            app:layout_constraintStart_toStartOf="@+id/tv_date"

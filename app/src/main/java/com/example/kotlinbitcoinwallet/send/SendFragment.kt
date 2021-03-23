@@ -1,11 +1,6 @@
 package com.example.kotlinbitcoinwallet.send
 
-import FeePriority
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
-import android.net.Uri
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -21,17 +16,12 @@ import androidx.core.widget.doOnTextChanged
 import com.example.kotlinbitcoinwallet.MainActivity
 import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.example.kotlinbitcoinwallet.R
-import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
 import io.horizontalsystems.bitcoincore.core.IPluginData
 import io.horizontalsystems.bitcoincore.managers.SendValueErrors
 import io.horizontalsystems.bitcoincore.models.TransactionDataSortType
 import io.horizontalsystems.bitcoinkit.BitcoinKit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
-import java.net.URL
 
 class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
@@ -45,9 +35,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var bitcoinKit: BitcoinKit
     private lateinit var feeTxt: TextView
     private lateinit var txIDTxt:TextView
-    private lateinit var feePriority: FeePriority
-    private lateinit var fee_Rate: SendViewModel.FEE_RATE
-    private  var feeRate:Int = 0
+    private lateinit var feeRate: SendViewModel.FEE_RATE
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -65,13 +53,8 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
         bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
         viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
-        fee_Rate = SendViewModel.FEE_RATE.MED
-        CoroutineScope(IO).launch {
+        feeRate = SendViewModel.FEE_RATE.MED
 
-            feePriority = generateFeePriority("https://mempool.space/api/v1/fees/recommended")
-            feeRate = feeRate
-
-        }
 
         return root
     }
@@ -81,7 +64,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        feeTxt.text = "${fee_Rate.name} ${viewModel.formattedFee}"
+        feeTxt.text = "${feeRate.name} ${viewModel.formattedFee}"
         sendTxt.text =SpannableStringBuilder( viewModel.sendAddress)
         amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
 
@@ -106,9 +89,9 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
        amountTxt.doOnTextChanged { text, _, _, _ ->
            viewModel.amount = (text.toString().toDouble() * viewModel.sats).toLong()
            Log.d("SF", "Amount changed to: ${viewModel.amount}")
-           viewModel.generateFee(bitcoinKit, fee_Rate)
+           viewModel.generateFee(bitcoinKit, feeRate)
 
-           feeTxt.text = "${fee_Rate.name} ${viewModel.formattedFee}"
+           feeTxt.text = "${feeRate.name} ${viewModel.formattedFee}"
        }
 
     }
@@ -179,8 +162,8 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                      .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr ")
                      .setPositiveButton("SEND") { _, _ ->
                          try {
-                             Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(fee_Rate)}(${fee_Rate.name})")
-                          val tx= bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(fee_Rate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
+                             Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
+                          val tx= bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
                             sentDialogue(tx.header.hash)
                          } catch (e:SendValueErrors.Dust){
                              Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
@@ -234,21 +217,21 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
        when(item!!.itemId){
            R.id.high_fee ->{
-               fee_Rate = SendViewModel.FEE_RATE.HIGH
-               viewModel.generateFee(bitcoinKit, fee_Rate)
-               feeTxt.text = SpannableStringBuilder("${fee_Rate.name} ${viewModel.formatFee()}")
+               feeRate = SendViewModel.FEE_RATE.HIGH
+               viewModel.generateFee(bitcoinKit, feeRate)
+               feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
                return true
            }
            R.id.low_fee ->{
-               fee_Rate = SendViewModel.FEE_RATE.LOW
-               viewModel.generateFee(bitcoinKit, fee_Rate)
-               feeTxt.text = SpannableStringBuilder("${fee_Rate.name} ${viewModel.formatFee()}")
+               feeRate = SendViewModel.FEE_RATE.LOW
+               viewModel.generateFee(bitcoinKit, feeRate)
+               feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
                return true
            }
            R.id.med_fee -> {
-               fee_Rate = SendViewModel.FEE_RATE.MED
-               viewModel.generateFee(bitcoinKit,fee_Rate)
-               feeTxt.text = SpannableStringBuilder("${fee_Rate.name} ${viewModel.formatFee()}")
+               feeRate = SendViewModel.FEE_RATE.MED
+               viewModel.generateFee(bitcoinKit,feeRate)
+               feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
                 return true
            }
            else -> {
@@ -262,14 +245,8 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     }
 
 
-    private fun generateFeePriority(feeUrl: String): FeePriority {
-        val response = URL(feeUrl).readText()
-        val gson = Gson()
-        return gson.fromJson(response, FeePriority::class.java)
-    }
-    private fun generateFee(value: Long, address: String? = null): Long {
-        return bitcoinKit.fee(value, address, feeRate = feeRate)
-    }
+
+
 
 
 }

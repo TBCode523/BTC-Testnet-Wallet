@@ -31,12 +31,10 @@ class DashFragment : Fragment(){
     private lateinit var txtNoTransaction:TextView
     private lateinit var bitcoinKit: BitcoinKit
     private lateinit var adapter: TxAdapter
-    val SATS = 100000000.00
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        populateAdapter()
         val root = inflater.inflate(R.layout.dash_fragment, container, false)
         recyclerView = root.findViewById(R.id.dash_recyclerview)
         txtBalance = root.findViewById(R.id.tv_Balance)
@@ -44,15 +42,7 @@ class DashFragment : Fragment(){
         txtNoTransaction.visibility = View.GONE
 
         try {
-         //   wallet = (activity as MainActivity).walletAppKit.wallet()
          bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
-            viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
-
-            //TODO keep a reference to the kits wallet even after destruction, then add listeners
-            viewModel.getBalance(bitcoinKit)
-            viewModel.getTransactions(bitcoinKit)
-
-
         }catch (e:Exception){
             Toast.makeText(context,"${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -63,59 +53,38 @@ class DashFragment : Fragment(){
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        try {
 
-        viewModel.balance.observe(viewLifecycleOwner, Observer {
-            balance ->
-            when(balance){
-                null ->  txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
-                else-> txtBalance.text = SpannableStringBuilder("${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} BTC")
-            }
-        })
-        viewModel.transactions.observe(viewLifecycleOwner, Observer {
-            it?.let { transactions ->
-                if(adapter?.itemCount == 0) txtNoTransaction.visibility = View.VISIBLE
-               adapter.transactions = transactions
-                adapter.notifyDataSetChanged()
-            }
-        })
+            viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
 
-        adapter = TxAdapter(viewModel.transactions.value)
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
+            viewModel.getBalance(bitcoinKit)
+            viewModel.getTransactions(bitcoinKit)
 
+            viewModel.balance.observe(viewLifecycleOwner, Observer { balance ->
+                when (balance) {
+                    null -> txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
+                    else -> txtBalance.text = SpannableStringBuilder("${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} BTC")
+                }
+            })
+            viewModel.transactions.observe(viewLifecycleOwner, Observer {
+                it?.let { transactions ->
+                    if (adapter?.itemCount == 0) txtNoTransaction.visibility = View.VISIBLE
+                    adapter.transactions = transactions
+                    adapter.notifyDataSetChanged()
+                }
+            })
 
+            adapter = TxAdapter(viewModel.transactions.value)
+            recyclerView.adapter = adapter
+            recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
+
+        } catch (e:Exception){
+            txtBalance.text = SpannableStringBuilder("0.00 tBTC")
+            txtNoTransaction.visibility = View.VISIBLE
+        }
 
 
     }
-    private fun populateAdapter(): MutableList<String>{
-         val stringList = mutableListOf<String>()
-        for (i in 1..35){
-            stringList.add("TX ")
-        }
-
-        return stringList
-    }
- /*   private fun showAllAddresses(wallet:Wallet){
-        val addresses = wallet.issuedReceiveAddresses
-        var str = "Balance: ${wallet.balance}"
-        for (address in addresses){
-            str+="\n"+ (address as SegwitAddress).toBech32()
-        }
-        for(t in wallet.walletTransactions!!) {
-            str += "\n" + t.transaction.txId
-        }
-        str+= "\nRecieved: ${wallet.totalReceived.toPlainString()} BTC\n${wallet.totalSent.toPlainString()} BTC \n Creation-Time:${wallet.earliestKeyCreationTime}"
-        val alertDialog = AlertDialog.Builder(this.requireContext())
-                .setTitle("Wallet Check-Up")
-                .setMessage(str)
-                .setPositiveButton("OK"){ _, _->
 
 
-
-
-
-
-                }.create()
-        alertDialog.show()
-    }*/
 }
