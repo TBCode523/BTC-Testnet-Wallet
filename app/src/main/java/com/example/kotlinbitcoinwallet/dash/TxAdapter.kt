@@ -23,7 +23,7 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
     inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.tv_date)
         val amount: TextView = itemView.findViewById(R.id.tv_amount)
-        val img:ImageView = itemView.findViewById(R.id.img_recieve_send)
+        val img:ImageView = itemView.findViewById(R.id.img_receive_send)
 
         init {
             itemView.setOnClickListener {

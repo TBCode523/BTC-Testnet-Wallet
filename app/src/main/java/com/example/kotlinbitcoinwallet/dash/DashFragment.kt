@@ -3,6 +3,7 @@ package com.example.kotlinbitcoinwallet.dash
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.SpannableStringBuilder
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -43,6 +44,7 @@ class DashFragment : Fragment(){
 
         try {
          bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
+            Log.d("btc-kit","${bitcoinKit.statusInfo()}")
         }catch (e:Exception){
             Toast.makeText(context,"${e.message}", Toast.LENGTH_LONG).show()
         }

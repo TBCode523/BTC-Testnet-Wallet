@@ -41,14 +41,16 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
         private val walletId = "MyWallet"
         private var networkType = BitcoinKit.NetworkType.TestNet
-        private var syncMode = BitcoinCore.SyncMode.Api()
+        private var syncMode:BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
         private var bip = Bip.BIP84
 
 
         fun setNetworkType(type: BitcoinKit.NetworkType){
             networkType = type
         }
-
+        fun setSync(syncMode: BitcoinCore.SyncMode){
+            this.syncMode = syncMode
+        }
     }
     lateinit var viewModel: MainViewModel
     private lateinit var sharedPref: SharedPreferences
@@ -71,23 +73,25 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
             if(!sharedPref.contains(walletId)) btcDialog()
             val words = sharedPref.getString(walletId,null)?.split(" ")
             Log.d("btc-db","Seed Phrase: ${sharedPref.getString(walletId,"")}")
+            Log.d("btc-db","syncMode: ${syncMode::class.java}")
+            Log.d("btc-db","bip: $bip")
             bitcoinKit = BitcoinKit(this,words!!,walletId,networkType, syncMode = syncMode, bip = bip)
             viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
             viewModel.state.observe(this, { state ->
                 when(state){
                     is BitcoinCore.KitState.Synced -> {
-                        Log.d("btc-kit-sync", "SYNCED!")
+                        Log.d("btc-kit", "SYNCED!")
                         Toast.makeText(this,"Synced",Toast.LENGTH_SHORT).show()
                     }
                     is BitcoinCore.KitState.Syncing ->{
                         Toast.makeText(this,"Syncing",Toast.LENGTH_SHORT).show()
-                        Log.d("btc-kit-syncing", "syncing ${"%.3f".format(state.progress)}")
+                        Log.d("btc-kit","\"syncing ${"%.3f".format(state.progress)}\"")
                     }
                     is BitcoinCore.KitState.ApiSyncing -> {
-                        Log.d("btc-kit-api","api syncing ${state.transactions} txs")
+                        Log.d("btc-kit","api syncing ${state.transactions} txs")
                     }
                     is BitcoinCore.KitState.NotSynced -> {
-                        Log.d("btc-kit-notsync","not synced ${state.exception.javaClass.simpleName}")
+                        Log.d("btc-kit","not synced ${state.exception.javaClass.simpleName}")
                     }
                 }
             })
@@ -103,7 +107,7 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     override fun onStop() {
         super.onStop()
-        viewModel.stop()
+        //viewModel.stop()
     }
     private fun btcDialog(){
         val sb = StringBuilder()
@@ -112,6 +116,7 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         MnemonicGenerator(English.INSTANCE)
                 .createMnemonic(entropy, sb::append)
         sharedPref.edit().putString(walletId, sb.toString()).apply()
+        syncMode = BitcoinCore.SyncMode.NewWallet()
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("No Wallet found")
             .setMessage("You don't have a wallet yet we'll create one for you!")

@@ -38,6 +38,7 @@ class MainViewModel(val bitcoinKit: BitcoinKit): ViewModel(), BitcoinKit.Listene
         }
     }
     fun stop() {
+        started =false
         bitcoinKit.stop()
     }
     override fun onTransactionsUpdate(

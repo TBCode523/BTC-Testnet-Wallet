@@ -2,19 +2,19 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    >
    <androidx.constraintlayout.widget.ConstraintLayout
        android:layout_width="match_parent"
        android:layout_height="match_parent" >
 
        <ImageView
-           android:id="@+id/img_recieve_send"
+           android:id="@+id/img_receive_send"
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:layout_margin="20dp"
-           android:contentDescription="@string/sent_or_recieve"
+           android:contentDescription="@string/sent_or_receive"
            android:src="@mipmap/ic_launcher"
            app:layout_constraintBottom_toBottomOf="parent"
            app:layout_constraintStart_toStartOf="parent"
@@ -25,7 +25,7 @@
            android:layout_width="wrap_content"
            android:layout_height="match_parent"
            android:text="@string/example_text"
-           app:layout_constraintBottom_toTopOf="@+id/img_recieve_send"
+           app:layout_constraintBottom_toTopOf="@+id/img_receive_send"
            app:layout_constraintStart_toStartOf="parent" />
 
        <TextView
