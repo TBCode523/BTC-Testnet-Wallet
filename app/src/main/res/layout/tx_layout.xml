@@ -25,11 +25,13 @@
            android:layout_width="wrap_content"
            android:layout_height="match_parent"
            android:text="@string/example_text"
+           style="@style/TimeText"
            app:layout_constraintBottom_toTopOf="@+id/img_receive_send"
            app:layout_constraintStart_toStartOf="parent" />
 
        <TextView
            android:id="@+id/tv_amount"
+           style="@style/AmountText"
            android:layout_width="wrap_content"
            android:layout_height="match_parent"
            android:text="@string/example_text"

@@ -47,7 +47,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         feeTxt = root.findViewById(R.id.tv_fee)
         scanBtn = root.findViewById(R.id.btn_scan)
         sendBtn = root.findViewById(R.id.btn_send)
-        txIDTxt = root.findViewById(R.id.tv_txID)
+
 
 
 

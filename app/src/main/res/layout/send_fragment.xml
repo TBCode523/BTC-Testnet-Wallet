@@ -6,82 +6,141 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".send.SendFragment">
 
-    <EditText
-        android:id="@+id/ev_address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/recipient_address"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-    <EditText
-        android:id="@+id/ev_amount"
-        android:text="@string/starting_amount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:hint="@string/amount_in_btc"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ev_address"
-        app:layout_constraintBottom_toTopOf="@id/btn_scan"/>
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/fee_relative_layout"
-        app:layout_constraintTop_toBottomOf="@id/ev_amount"
-       >
+
+<LinearLayout
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="start"
+    android:id="@+id/layout_address"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+   >
     <TextView
+        android:id="@+id/tv_Address"
+        style="@style/SendText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/fee_priority"
-        android:id="@+id/tv_fee_title"
-        />
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="24dp"
+        android:text="@string/address"
+       />
+
+    <EditText
+        android:id="@+id/ev_address"
+        style="@style/SendEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_weight="1"
+        android:hint=""
+        android:layout_marginStart="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tv_Address"
+        app:layout_constraintTop_toTopOf="parent" />
+</LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="20dp"
+        android:id="@+id/layout_amount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_address">
+
+
+        <TextView
+            android:id="@+id/tv_amount"
+            style="@style/SendText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/amount"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <EditText
+            android:id="@+id/ev_amount"
+            style="@style/SendEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:hint="@string/amount_in_btc"
+            android:inputType="numberDecimal"
+            android:text="@string/starting_amount" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/fee_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        app:layout_constraintTop_toBottomOf="@id/layout_amount"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_fee_title"
+            android:paddingEnd="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/fee_priority" />
 
         <TextView
             android:id="@+id/tv_fee"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_alignStart="@id/tv_fee_title"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="83dp"
-            android:layout_marginEnd="190dp"
-
+            android:layout_weight=".75"
             android:text="@string/medium_fee" />
-    </RelativeLayout>
-
-    <Button
-        android:id="@+id/btn_scan"
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="20dp"
+        android:id="@+id/layout_btns"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/scan_qr_code"
-        app:layout_constraintBottom_toTopOf="@id/btn_send"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintLeft_toLeftOf="parent"
+        android:gravity="start"
+        android:orientation="horizontal"
+
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/fee_relative_layout"
-        app:layout_constraintVertical_bias="0.459" />
-
-    <Button
-        android:id="@+id/btn_send"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/send_transaction"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:id="@+id/tv_txID"
-        android:textIsSelectable="true"
-        android:layout_marginTop="44dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fee_relative_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/fee_relative_layout">
+
+        <Button
+            android:id="@+id/btn_scan"
+            android:layout_width="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="5dp"
+            android:text="@string/scan_qr_code"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <Button
+            android:id="@+id/btn_send"
+            android:layout_width="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/send"
+            android:layout_margin="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="@id/btn_scan"
+            app:layout_constraintRight_toRightOf="parent" />
+    </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

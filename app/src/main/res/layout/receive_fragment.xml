@@ -35,9 +35,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="72dp"
         android:id="@+id/generate_btn"
+
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/qr_code"
-        android:text="@string/generate_address"/>
+        android:text="@string/create_qr_code"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
