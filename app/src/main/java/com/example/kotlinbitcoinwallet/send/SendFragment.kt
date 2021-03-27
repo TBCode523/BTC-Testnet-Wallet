@@ -148,14 +148,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     }
        private fun confirmDialogue(){
          try {
-          /*   val sats = 100000000
-             val sendAddress = StringBuilder(sendTxt.text).toString()
-             val amount = StringBuilder(amountTxt.text).toString()
-             val amountToLong = (amount.toDouble() * sats).toLong()
-             val fee = generateFee(amountToLong)
-             */
-            // val amountFormatted = NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)
-
+//TODO Need More Error Checking
              val sendAddressStr: String = "To: " + viewModel.sendAddress
              val amountStr = "Amount: ${viewModel.formatAmount()} BTC"
              val feeStr = "Fee: ${viewModel.formatFee()}"

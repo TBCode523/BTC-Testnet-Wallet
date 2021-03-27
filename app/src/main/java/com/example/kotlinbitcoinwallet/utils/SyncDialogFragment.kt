@@ -22,6 +22,7 @@ class SyncDialogFragment(private val syncState:MutableLiveData<BitcoinCore.KitSt
     private lateinit var syncTxt:TextView
     private lateinit var cBlockTxt:TextView
     private lateinit var dateTxt:TextView
+    private lateinit var noteTxt:TextView
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val root = inflater.inflate(R.layout.sync_dialog, container, false)
         titleTxt = root.findViewById(R.id.tv_dialog_title)

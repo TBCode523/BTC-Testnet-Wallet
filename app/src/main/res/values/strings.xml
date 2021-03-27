@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">KotlinBitcoinWallet</string>
+    <string name="app_name">BTC Testnet Wallet</string>
     <string name="btc_address">BTC Address</string>
     <string name="generate_address">Generate Address</string>
     <string name="address_qr_code">Address QR Code</string>
@@ -15,7 +15,7 @@
     <string name="low_fee">LOW</string>
     <string name="fee_priority">Fee Priority:</string>
     <string name="example_text">Example Text</string>
-    <string name="sent_or_receive">Sent or Recieve</string>
+    <string name="sent_or_receive">Sent or Receive</string>
     <string name="address">Address:</string>
     <string name="amount">Amount:</string>
     <string name="current_balance">Current Balance:</string>
