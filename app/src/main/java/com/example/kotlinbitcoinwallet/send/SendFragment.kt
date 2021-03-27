@@ -1,11 +1,9 @@
 package com.example.kotlinbitcoinwallet.send
 
 import android.content.Intent
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -13,6 +11,8 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.kotlinbitcoinwallet.MainActivity
 import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.example.kotlinbitcoinwallet.R
@@ -67,7 +67,10 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         feeTxt.text = "${feeRate.name} ${viewModel.formattedFee}"
         sendTxt.text =SpannableStringBuilder( viewModel.sendAddress)
         amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
-
+     //   when(bitcoinKit.syncState){
+     //       BitcoinCore.KitState.Synced -> return
+     //       else -> syncDialogue()
+      //  }
 
         scanBtn.setOnClickListener{
 
@@ -95,6 +98,9 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
        }
 
     }
+
+
+
     private fun scanQRCode(){
         val integrator = IntentIntegrator.forSupportFragment(this).apply {
             captureActivity = CaptureActivity::class.java
