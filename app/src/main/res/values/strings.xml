@@ -18,4 +18,5 @@
     <string name="sent_or_receive">Sent or Recieve</string>
     <string name="address">Address:</string>
     <string name="amount">Amount:</string>
+    <string name="current_balance">Current Balance:</string>
 </resources>

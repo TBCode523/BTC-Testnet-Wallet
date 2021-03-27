@@ -3,13 +3,11 @@ package com.example.kotlinbitcoinwallet.dash
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import io.horizontalsystems.bitcoincore.models.BalanceInfo
-import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoincore.models.TransactionInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import io.reactivex.disposables.CompositeDisposable
 
 class DashViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
     //Role: Retrieve balance and transactions
     val transactions = MutableLiveData<List<TransactionInfo>>()
     val balance = MutableLiveData<BalanceInfo>()

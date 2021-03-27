@@ -68,7 +68,6 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
             viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
             syncDialog = SyncDialogFragment(viewModel.state, viewModel.lastBlock)
             syncDialog.show(supportFragmentManager, "syncDialogue")
-            clearDialogue()
         }catch (e:Exception) {
             Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -78,46 +77,6 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     }
 
-
-
-    override fun onStart() {
-        super.onStart()
-        Log.d("btc-kit", "In onStart")
-        var str = ""
-        viewModel.state.observe(this,  { state ->
-            Log.d("btc-kit", "In Sync check")
-            str = when (state) {
-
-                is BitcoinCore.KitState.Synced -> {
-                    Log.d("btc-kit", "Is Synced")
-                    "synced"
-                }
-                is BitcoinCore.KitState.ApiSyncing -> {
-                    Log.d("btc-kit", "Api Syncing")
-                    "api syncing ${state.transactions} txs"
-                }
-                is BitcoinCore.KitState.Syncing -> {
-                    Log.d("btc-kit", "Syncing")
-                    "syncing ${"%.3f".format(state.progress)}"
-                }
-                is BitcoinCore.KitState.NotSynced -> {
-                    Log.d("btc-kit", "Wrecked")
-                    "not synced ${state.exception.javaClass.simpleName}"
-                }
-            }
-            if(state != BitcoinCore.KitState.Synced){
-                Log.d("btc-kit", "Not Synced check")
-           /*    val alertDialog = AlertDialog.Builder(this)
-                        .setTitle("Wallet is Not Synced")
-                        .setMessage(str)
-                        .setPositiveButton("OK"){ _, _->
-
-
-                        }.create()
-                alertDialog.show()*/
-            }
-        })
-    }
 
     private fun clearDialogue() {
         val alertDialog = AlertDialog.Builder(this)

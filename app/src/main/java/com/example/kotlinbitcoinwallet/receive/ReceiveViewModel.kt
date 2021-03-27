@@ -4,9 +4,7 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 
 class ReceiveViewModel : ViewModel() {
 //Role: Generate Addresses and QRCodes
-    var text:String = "Receive Fragment"
- //   var currentAddress: Address? = null
-    var currentAddressString:String = "25"
+    var currentAddressString:String = ""
 
     fun generateAddress(bitcoinKit: BitcoinKit):String{
         currentAddressString = bitcoinKit.receiveAddress()

@@ -1,32 +1,27 @@
 package com.example.kotlinbitcoinwallet.receive
 import android.content.ContentValues.TAG
-import android.content.Context
-import android.content.DialogInterface
-import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.util.Log
-import android.util.Log.VERBOSE
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
-import androidx.appcompat.app.AlertDialog
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.kotlinbitcoinwallet.MainActivity
 import com.example.kotlinbitcoinwallet.R
-import com.google.common.base.Joiner
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
-import io.horizontalsystems.bitcoincore.core.IStorage
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -54,7 +49,6 @@ class ReceiveFragment : Fragment() {
         bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
         try {
             receiveClick()
-          // showAllAddresses(bitcoinKit)
         }catch (e:Exception){
             Toast.makeText(context,"Wallet is Null",Toast.LENGTH_LONG).show()
         }
@@ -65,24 +59,19 @@ class ReceiveFragment : Fragment() {
         return root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-
-    }
     private fun receiveClick() {
         try {
             val generatedAddress: String = viewModel.generateAddress(bitcoinKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
 
-     //       if(isClicked) generatedAddress = viewModel.generateNewAddress(wallet!!)
 
 
             CoroutineScope(IO).launch {
 
                 generateQRCode(generatedAddress)
             }
-            //  viewModel.text = newAddress
+
             receiveTxt.text = generatedAddress
 
             Log.v("Wallet", "Creating Wallet $walletNum")
@@ -125,29 +114,7 @@ class ReceiveFragment : Fragment() {
             setQRCode(bitmap)
 
         }
-    /* private fun showAllAddresses(wallet:Wallet){
-         val addresses = wallet.issuedReceiveAddresses
-         var str = "Balance: ${wallet.balance}"
-         for (address in addresses){
-             str+="\n"+ (address as SegwitAddress).toBech32()
-         }
-         for(word in wallet.keyChainSeed.mnemonicCode!!) {
-             str += "\n" + word
-         }
-
-         val alertDialog = AlertDialog.Builder(this.requireContext())
-             .setTitle("Used Addresses")
-             .setMessage(str)
-             .setPositiveButton("OK"){ _, _->
-
-
-
-
-
-
-             }.create()
-         alertDialog.show()
-     }
+    /*
     private fun showAllAddresses(bitcoinKit: BitcoinKit){
 
          val addresses = bitcoinKit.receivePublicKey().used()

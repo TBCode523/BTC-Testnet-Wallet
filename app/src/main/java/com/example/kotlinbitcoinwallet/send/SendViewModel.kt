@@ -1,5 +1,4 @@
 package com.example.kotlinbitcoinwallet.send
-//import org.bitcoinj.core.Coin
 import FeePriority
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import java.net.URL
-import kotlin.properties.Delegates
 
 class SendViewModel : ViewModel() {
 
@@ -19,7 +17,6 @@ class SendViewModel : ViewModel() {
     val sats = 100000000
     lateinit var feePriority:FeePriority
     var sendAddress = ""
-    var feeRate by Delegates.notNull<Int>()
     var amount:Long = 0
     var fee:Long = 0
     var formattedFee =NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
@@ -32,12 +29,12 @@ class SendViewModel : ViewModel() {
             } catch (e:Exception){
                 FeePriority(10,5,3)
             }
-            feeRate = feePriority.medFee
-            formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feeRate/ 100_000_000.0)
+
+            formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feePriority.medFee/ 100_000_000.0)
 
         }
     }
-      fun generateFeePriority(feeUrl: String): FeePriority {
+      private fun generateFeePriority(feeUrl: String): FeePriority {
 
         val response = URL(feeUrl).readText()
         val gson = Gson()

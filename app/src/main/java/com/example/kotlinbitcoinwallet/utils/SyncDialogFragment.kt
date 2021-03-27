@@ -34,7 +34,7 @@ class SyncDialogFragment(private val syncState:MutableLiveData<BitcoinCore.KitSt
                     Log.d("btc-kit-dialog","Synced")
                     Toast.makeText(this.requireContext(),"Wallet is Synced",Toast.LENGTH_SHORT).show()
                     syncTxt.text = SpannableStringBuilder("Synced!")
-                  //  dismiss()
+                    dismiss()
                 }
                 is BitcoinCore.KitState.Syncing ->{
 

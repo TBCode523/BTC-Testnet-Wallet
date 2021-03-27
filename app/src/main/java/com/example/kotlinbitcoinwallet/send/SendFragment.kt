@@ -34,7 +34,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var sendBtn:Button
     private lateinit var bitcoinKit: BitcoinKit
     private lateinit var feeTxt: TextView
-    private lateinit var txIDTxt:TextView
+    private lateinit var balanceTxt: TextView
     private lateinit var feeRate: SendViewModel.FEE_RATE
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,6 +45,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         sendTxt = root.findViewById(R.id.ev_address)
         amountTxt = root.findViewById(R.id.ev_amount)
         feeTxt = root.findViewById(R.id.tv_fee)
+        balanceTxt =  root.findViewById(R.id.tv_send_balance)
         scanBtn = root.findViewById(R.id.btn_scan)
         sendBtn = root.findViewById(R.id.btn_send)
 
@@ -67,11 +68,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         feeTxt.text = "${feeRate.name} ${viewModel.formattedFee}"
         sendTxt.text =SpannableStringBuilder( viewModel.sendAddress)
         amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
-     //   when(bitcoinKit.syncState){
-     //       BitcoinCore.KitState.Synced -> return
-     //       else -> syncDialogue()
-      //  }
-
+        balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(bitcoinKit.balance.spendable / 100_000_000.0)} BTC" )
         scanBtn.setOnClickListener{
 
             val scanner = IntentIntegrator(this.activity)
@@ -94,7 +91,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
            Log.d("SF", "Amount changed to: ${viewModel.amount}")
            viewModel.generateFee(bitcoinKit, feeRate)
 
-           feeTxt.text = "${feeRate.name} ${viewModel.formattedFee}"
+           feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formattedFee}")
        }
 
     }
@@ -169,6 +166,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                      .setPositiveButton("SEND") { _, _ ->
                          try {
                              Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
+                             bitcoinKit.validateAddress(viewModel.sendAddress, mutableMapOf())
                           val tx= bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
                             sentDialogue(tx.header.hash)
                          } catch (e:SendValueErrors.Dust){
