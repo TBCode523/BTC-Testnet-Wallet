@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet.send
+package tbcode.example.kotlinbitcoinwallet.send
 
 import android.content.Intent
 import android.os.Bundle
@@ -13,15 +13,15 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.kotlinbitcoinwallet.MainActivity
-import com.example.kotlinbitcoinwallet.NumberFormatHelper
-import com.example.kotlinbitcoinwallet.R
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
 import io.horizontalsystems.bitcoincore.core.IPluginData
 import io.horizontalsystems.bitcoincore.managers.SendValueErrors
 import io.horizontalsystems.bitcoincore.models.TransactionDataSortType
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import tbcode.example.kotlinbitcoinwallet.MainActivity
+import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
+import tbcode.example.kotlinbitcoinwallet.R
 
 class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 

@@ -1,20 +1,20 @@
-package com.example.kotlinbitcoinwallet.dash
+package tbcode.example.kotlinbitcoinwallet.dash
 
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
-import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import android.view.LayoutInflater.*
+import android.view.LayoutInflater.from
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat.startActivity
-import com.example.kotlinbitcoinwallet.NumberFormatHelper
-import com.example.kotlinbitcoinwallet.R
+import androidx.recyclerview.widget.RecyclerView
 import io.horizontalsystems.bitcoincore.models.TransactionInfo
 import io.horizontalsystems.bitcoincore.models.TransactionStatus
+import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
+import tbcode.example.kotlinbitcoinwallet.R
 import java.text.DateFormat
 import java.util.*
 
@@ -41,14 +41,14 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
         }
 
     }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TxAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
         val v = from(parent.context).inflate(R.layout.tx_layout, parent, false)
         return ViewHolder(v)
     }
 
     @SuppressLint("SetTextI18n")
-    override fun onBindViewHolder(holder: TxAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val amount = transactions?.get(position)?.let { calculateAmount(it) }!!
         val date = transactions?.get(position)?.timestamp?.let { formatDate(it) }
         if(transactions?.get(position)?.status == TransactionStatus.INVALID)

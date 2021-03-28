@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet.receive
+package tbcode.example.kotlinbitcoinwallet.receive
 import android.content.ContentValues.TAG
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -13,8 +13,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.kotlinbitcoinwallet.MainActivity
-import com.example.kotlinbitcoinwallet.R
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
@@ -24,6 +22,8 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tbcode.example.kotlinbitcoinwallet.MainActivity
+import tbcode.example.kotlinbitcoinwallet.R
 
 class ReceiveFragment : Fragment() {
 

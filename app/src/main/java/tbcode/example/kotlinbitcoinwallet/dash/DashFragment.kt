@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet.dash
+package tbcode.example.kotlinbitcoinwallet.dash
 
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -13,10 +13,10 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.kotlinbitcoinwallet.MainActivity
-import com.example.kotlinbitcoinwallet.NumberFormatHelper
-import com.example.kotlinbitcoinwallet.R
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import tbcode.example.kotlinbitcoinwallet.MainActivity
+import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
+import tbcode.example.kotlinbitcoinwallet.R
 
 
 class DashFragment : Fragment(){

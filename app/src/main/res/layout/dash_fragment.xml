@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:layout_marginBottom="30dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".dash.DashFragment">
+    tools:context="tbcode.example.kotlinbitcoinwallet.dash.DashFragment">
 
     <TextView
         android:id="@+id/tv_Balance"

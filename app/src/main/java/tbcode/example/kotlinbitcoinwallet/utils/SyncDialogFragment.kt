@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet.utils
+package tbcode.example.kotlinbitcoinwallet.utils
 
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -11,9 +11,9 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.example.kotlinbitcoinwallet.R
 import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoincore.models.BlockInfo
+import tbcode.example.kotlinbitcoinwallet.R
 import java.text.SimpleDateFormat
 import java.util.*
 

@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet.dash
+package tbcode.example.kotlinbitcoinwallet.dash
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

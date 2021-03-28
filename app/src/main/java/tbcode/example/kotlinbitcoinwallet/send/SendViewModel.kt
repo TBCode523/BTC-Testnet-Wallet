@@ -1,13 +1,13 @@
-package com.example.kotlinbitcoinwallet.send
+package tbcode.example.kotlinbitcoinwallet.send
 import FeePriority
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.kotlinbitcoinwallet.NumberFormatHelper
 import com.google.gson.Gson
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
 import java.net.URL
 
 class SendViewModel : ViewModel() {
@@ -19,7 +19,7 @@ class SendViewModel : ViewModel() {
     var sendAddress = ""
     var amount:Long = 0
     var fee:Long = 0
-    var formattedFee =NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
+    var formattedFee = NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
     init{
         CoroutineScope(IO).launch {
 

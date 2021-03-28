@@ -1,7 +1,9 @@
-package com.example.kotlinbitcoinwallet
+package tbcode.example.kotlinbitcoinwallet
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -12,7 +14,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.example.kotlinbitcoinwallet.utils.SyncDialogFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import io.github.novacrypto.bip39.MnemonicGenerator
 import io.github.novacrypto.bip39.Words
@@ -20,6 +21,7 @@ import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoincore.core.Bip
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import tbcode.example.kotlinbitcoinwallet.utils.SyncDialogFragment
 import java.security.SecureRandom
 
 class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
@@ -38,12 +40,13 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
             networkType = type
         }
         fun setSync(syncMode: BitcoinCore.SyncMode){
-            this.syncMode = syncMode
+            Companion.syncMode = syncMode
         }
     }
     lateinit var viewModel: MainViewModel
     private lateinit var sharedPref: SharedPreferences
     private  lateinit var syncDialog: SyncDialogFragment
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -51,10 +54,11 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
-        val appBarConfiguration = AppBarConfiguration(setOf(R.id.nav_receive, R.id.nav_dash,R.id.nav_send))
+        val appBarConfiguration = AppBarConfiguration(setOf(R.id.nav_receive, R.id.nav_dash, R.id.nav_send))
 
         setupActionBarWithNavController(navController,appBarConfiguration)
         navView.setupWithNavController(navController)
+
 
         try {
                sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
@@ -64,10 +68,13 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
             Log.d("btc-db","Seed Phrase: ${sharedPref.getString(walletId,"")}")
             Log.d("btc-db","syncMode: ${syncMode::class.java}")
             Log.d("btc-db","bip: $bip")
-            bitcoinKit = BitcoinKit(this,words!!,walletId,networkType, syncMode = syncMode, bip = bip)
+            bitcoinKit = BitcoinKit(this,words!!, walletId, networkType, syncMode = syncMode, bip = bip)
             viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
             syncDialog = SyncDialogFragment(viewModel.state, viewModel.lastBlock)
             syncDialog.show(supportFragmentManager, "syncDialogue")
+
+
+            if(!isOnline()) throw Exception("No Connection Detected!")
         }catch (e:Exception) {
             Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -76,7 +83,6 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
 
     }
-
 
     private fun clearDialogue() {
         val alertDialog = AlertDialog.Builder(this)
@@ -131,6 +137,10 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     }
 
-
+    fun isOnline(): Boolean {
+        val connMgr = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo: NetworkInfo? = connMgr.activeNetworkInfo
+        return networkInfo?.isConnected == true
+    }
 
 }

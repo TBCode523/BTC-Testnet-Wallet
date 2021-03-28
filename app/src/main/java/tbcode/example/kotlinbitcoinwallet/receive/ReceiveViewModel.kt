@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet.receive
+package tbcode.example.kotlinbitcoinwallet.receive
 import androidx.lifecycle.ViewModel
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 

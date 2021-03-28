@@ -1,4 +1,4 @@
-package com.example.kotlinbitcoinwallet
+package tbcode.example.kotlinbitcoinwallet
 
 import java.text.NumberFormat
 

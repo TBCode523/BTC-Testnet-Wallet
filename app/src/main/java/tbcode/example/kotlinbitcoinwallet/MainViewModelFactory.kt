@@ -1,9 +1,8 @@
-package com.example.kotlinbitcoinwallet
+package tbcode.example.kotlinbitcoinwallet
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.horizontalsystems.bitcoinkit.BitcoinKit
-import java.lang.IllegalArgumentException
 
 @Suppress("UNCHECKED_CAST")
 class MainViewModelFactory(private  var bitcoinKit: BitcoinKit):ViewModelProvider.Factory{
