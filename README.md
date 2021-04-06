@@ -1,5 +1,6 @@
 # BTC-Testnet-Wallet
 A modern and minimalistic bitcoin test-net wallet app for developers and newbies alike!
+Download on the playstore: 
 # Privacy Policy:
 Last updated: March 28, 2021
 
