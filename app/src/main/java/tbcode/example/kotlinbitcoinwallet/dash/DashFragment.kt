@@ -14,9 +14,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.horizontalsystems.bitcoinkit.BitcoinKit
-import tbcode.example.kotlinbitcoinwallet.MainActivity
 import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
 import tbcode.example.kotlinbitcoinwallet.R
+import tbcode.example.kotlinbitcoinwallet.utils.KitSyncService
 
 
 class DashFragment : Fragment(){
@@ -40,7 +40,8 @@ class DashFragment : Fragment(){
         txtNoTransaction.visibility = View.GONE
 
         try {
-         bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
+     //    bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
+            bitcoinKit = KitSyncService.instance.getKit()
             Log.d("btc-kit","${bitcoinKit.statusInfo()}")
            
         }catch (e:Exception){

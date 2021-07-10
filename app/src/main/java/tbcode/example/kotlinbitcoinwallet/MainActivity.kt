@@ -1,9 +1,11 @@
 package tbcode.example.kotlinbitcoinwallet
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -71,7 +73,7 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
             Log.d("btc-db","bip: $bip")
             bitcoinKit = BitcoinKit(this,words!!, walletId, networkType, syncMode = syncMode, bip = bip)
             if(!isOnline()) throw Exception("No Connection Detected!")
-        /*    val serviceIntent = Intent(this, KitSyncService::class.java)
+            val serviceIntent = Intent(this, KitSyncService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
                 Log.d("btc-db","Starting Foreground Service")
                 startForegroundService(serviceIntent)
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
                 Log.d("btc-db","Starting Regular Service")
                 startService(serviceIntent)
             }
-            Log.d("btc-db","Service Component type: ${serviceIntent.component}")*/
+            Log.d("btc-db","Service Component type: ${serviceIntent.component}")
             viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
        //     syncDialog = SyncDialogFragment(viewModel.state, viewModel.lastBlock)
             syncDialog = SyncDialogFragment(KitSyncService.kitState, KitSyncService.lastBlock)

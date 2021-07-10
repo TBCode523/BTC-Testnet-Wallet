@@ -1,13 +1,11 @@
 package tbcode.example.kotlinbitcoinwallet.utils
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
@@ -17,6 +15,7 @@ import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.kotlinbitcoinwallet.MainActivity
 import tbcode.example.kotlinbitcoinwallet.R
+import java.util.*
 
 class KitSyncService: Service(), BitcoinKit.Listener {
     companion object {
@@ -34,6 +33,20 @@ class KitSyncService: Service(), BitcoinKit.Listener {
             Log.d("btc-db", "Stopping Foreground Service!")
             isRunning = false
             bitcoinKit.stop()
+            val alarmIntent = Intent(instance, KitBroadcastReceiver::class.java).let {
+                    i -> PendingIntent.getBroadcast(instance, 0, i, 0)
+            }
+            //  val alarmPending = PendingIntent.getActivity(this, 1, alarmIntent, 0)
+            val alarmMgr =
+                instance.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+            alarmMgr?.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 30000L,
+                alarmIntent
+            )
+            val date = Calendar.getInstance().time
+            val newDate = Date(date.time + 30000L)
+            Log.d("btc-db", "Setting Alarm at ${newDate}!")
             instance.stopSelf()
             instance.stopForeground(true)
 
