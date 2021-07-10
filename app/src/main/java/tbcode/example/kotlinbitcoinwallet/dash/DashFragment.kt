@@ -42,6 +42,7 @@ class DashFragment : Fragment(){
         try {
          bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
             Log.d("btc-kit","${bitcoinKit.statusInfo()}")
+           
         }catch (e:Exception){
             Toast.makeText(context,"${e.message}", Toast.LENGTH_LONG).show()
         }

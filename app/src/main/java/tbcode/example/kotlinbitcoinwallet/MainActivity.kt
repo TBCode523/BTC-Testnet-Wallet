@@ -21,6 +21,7 @@ import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoincore.core.Bip
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import tbcode.example.kotlinbitcoinwallet.utils.KitSyncService
 import tbcode.example.kotlinbitcoinwallet.utils.SyncDialogFragment
 import java.security.SecureRandom
 
@@ -69,12 +70,23 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
             Log.d("btc-db","syncMode: ${syncMode::class.java}")
             Log.d("btc-db","bip: $bip")
             bitcoinKit = BitcoinKit(this,words!!, walletId, networkType, syncMode = syncMode, bip = bip)
+            if(!isOnline()) throw Exception("No Connection Detected!")
+        /*    val serviceIntent = Intent(this, KitSyncService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+                Log.d("btc-db","Starting Foreground Service")
+                startForegroundService(serviceIntent)
+            } else{
+                Log.d("btc-db","Starting Regular Service")
+                startService(serviceIntent)
+            }
+            Log.d("btc-db","Service Component type: ${serviceIntent.component}")*/
             viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
-            syncDialog = SyncDialogFragment(viewModel.state, viewModel.lastBlock)
+       //     syncDialog = SyncDialogFragment(viewModel.state, viewModel.lastBlock)
+            syncDialog = SyncDialogFragment(KitSyncService.kitState, KitSyncService.lastBlock)
             syncDialog.show(supportFragmentManager, "syncDialogue")
 
 
-            if(!isOnline()) throw Exception("No Connection Detected!")
+
         }catch (e:Exception) {
             Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -137,8 +149,8 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
     }
 
-    fun isOnline(): Boolean {
-        val connMgr = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private fun isOnline(): Boolean {
+        val connMgr = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val networkInfo: NetworkInfo? = connMgr.activeNetworkInfo
         return networkInfo?.isConnected == true
     }
