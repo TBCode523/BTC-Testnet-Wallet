@@ -1,6 +1,6 @@
 # Bitcoin Testnet Wallet
 A modern and minimalistic bitcoin test-net wallet app for developers and newbies alike!
-Download on the playstore: 
+Download on the playstore: https://play.google.com/store/apps/details?id=tbcode.example.kotlinbitcoinwallet
 # Privacy Policy:
 Last updated: March 28, 2021
 
