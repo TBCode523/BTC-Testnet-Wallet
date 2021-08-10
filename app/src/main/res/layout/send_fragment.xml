@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:forceDarkAllowed="false"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="tbcode.example.kotlinbitcoinwallet.send.SendFragment">
 
@@ -72,12 +73,24 @@
             style="@style/SendEditText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-
             android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:hint="@string/amount_in_btc"
             android:inputType="numberDecimal"
             android:text="@string/starting_amount" />
+        <Button
+            android:id="@+id/btn_max"
+            android:layout_width="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="5dp"
+            android:text="@string/max"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
     </LinearLayout>
 
     <TextView

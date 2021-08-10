@@ -41,8 +41,11 @@ class DashFragment : Fragment(){
 
         try {
      //    bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
-            bitcoinKit = KitSyncService.instance.getKit()
-            Log.d("btc-kit","${bitcoinKit.statusInfo()}")
+            bitcoinKit = if(KitSyncService.isRunning){
+                Log.d("btc-dash","Is kit active?: ${KitSyncService.bitcoinKit.statusInfo()}")
+                KitSyncService.bitcoinKit
+            } else KitSyncService.bitcoinKit
+       //     Log.d("btc-kit","${bitcoinKit.statusInfo()}")
            
         }catch (e:Exception){
             Toast.makeText(context,"${e.message}", Toast.LENGTH_LONG).show()
@@ -55,7 +58,7 @@ class DashFragment : Fragment(){
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
-
+          //  bitcoinKit = KitSyncService.instance.getKit()
             viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
 
             viewModel.getBalance(bitcoinKit)
@@ -64,7 +67,7 @@ class DashFragment : Fragment(){
             viewModel.balance.observe(viewLifecycleOwner, Observer { balance ->
                 when (balance) {
                     null -> txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
-                    else -> txtBalance.text = SpannableStringBuilder("${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} BTC")
+                    else -> txtBalance.text = SpannableStringBuilder("${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} tBTC")
                 }
             })
             viewModel.transactions.observe(viewLifecycleOwner, Observer {

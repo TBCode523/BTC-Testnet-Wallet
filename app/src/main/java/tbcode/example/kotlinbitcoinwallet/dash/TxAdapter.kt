@@ -51,9 +51,11 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val amount = transactions?.get(position)?.let { calculateAmount(it) }!!
         val date = transactions?.get(position)?.timestamp?.let { formatDate(it) }
-        if(transactions?.get(position)?.status == TransactionStatus.INVALID)
-       holder.date.text = "Invalid"
-        else holder.date.text = "$date"
+        when (transactions?.get(position)?.status) {
+            TransactionStatus.NEW -> holder.date.text = "$date (Pending)"
+            TransactionStatus.RELAYED -> holder.date.text = "$date"
+            else -> holder.date.text = "Invalid"
+        }
 
         holder.amount.text = "${NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)} BTC"
 

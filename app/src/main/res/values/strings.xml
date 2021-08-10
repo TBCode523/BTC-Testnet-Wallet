@@ -8,8 +8,8 @@
     <string name="recipient_address">Recipient Address</string>
     <string name="amount_in_btc">Amount in BTC</string>
     <string name="send">Send</string>
-    <string name="starting_amount">0.0</string>
-    <string name="starting_balance">0.00 BTC</string>
+    <string name="starting_amount">0.00</string>
+    <string name="starting_balance">0.00 tBTC</string>
     <string name="high_fee">HIGH</string>
     <string name="medium_fee">MEDIUM</string>
     <string name="low_fee">LOW</string>
@@ -19,4 +19,6 @@
     <string name="address">Address:</string>
     <string name="amount">Amount:</string>
     <string name="current_balance">Current Balance:</string>
+    <string name="max">MAX</string>
+    <string name="don_t_remind_me_again">Don\'t remind me again</string>
 </resources>

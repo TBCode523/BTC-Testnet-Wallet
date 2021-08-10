@@ -3,7 +3,11 @@ import FeePriority
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
+import io.horizontalsystems.bitcoincore.core.IPluginData
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import io.horizontalsystems.hodler.HodlerData
+import io.horizontalsystems.hodler.HodlerPlugin
+import io.horizontalsystems.hodler.LockTimeInterval
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -19,7 +23,9 @@ class SendViewModel : ViewModel() {
     var sendAddress = ""
     var amount:Long = 0
     var fee:Long = 0
-    var formattedFee = NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
+    var formattedFee: String = NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
+    var timeLockInterval: LockTimeInterval? = null
+
     init{
         CoroutineScope(IO).launch {
 
@@ -48,6 +54,7 @@ class SendViewModel : ViewModel() {
 
             formattedFee = NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)
         } catch (e:Exception){
+            Log.d("SF-SVM","Error:$e")
             fee = 0
             formattedFee = NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)
         }
@@ -56,6 +63,7 @@ class SendViewModel : ViewModel() {
     }
     fun generateFee(bitcoinKit: BitcoinKit,feeRate: FEE_RATE): Long {
         fee = try {
+            Log.d("SF-SVM", "amount: $amount")
             when (feeRate) {
                 FEE_RATE.MED -> bitcoinKit.fee(amount, feeRate = feePriority.medFee)
                 FEE_RATE.LOW -> bitcoinKit.fee(amount, feeRate = feePriority.lowFee)
@@ -75,6 +83,7 @@ class SendViewModel : ViewModel() {
             else -> feePriority.medFee
         }
     }
+
     fun formatAmount():String{
         return NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)
     }
@@ -83,6 +92,13 @@ class SendViewModel : ViewModel() {
     }
     fun formatTotal():String{
         return  "${NumberFormatHelper.cryptoAmountFormat.format((fee+amount) / 100_000_000.0)} BTC"
+    }
+    fun getPluginData(): MutableMap<Byte, IPluginData> {
+        val pluginData = mutableMapOf<Byte, IPluginData>()
+        timeLockInterval?.let {
+            pluginData[HodlerPlugin.id] = HodlerData(it)
+        }
+        return pluginData
     }
 
 

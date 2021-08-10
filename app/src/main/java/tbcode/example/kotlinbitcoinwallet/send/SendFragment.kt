@@ -1,6 +1,7 @@
 package tbcode.example.kotlinbitcoinwallet.send
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.util.Log
@@ -16,12 +17,14 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
 import io.horizontalsystems.bitcoincore.core.IPluginData
+import io.horizontalsystems.bitcoincore.exceptions.AddressFormatException
 import io.horizontalsystems.bitcoincore.managers.SendValueErrors
+import io.horizontalsystems.bitcoincore.models.Transaction
 import io.horizontalsystems.bitcoincore.models.TransactionDataSortType
 import io.horizontalsystems.bitcoinkit.BitcoinKit
-import tbcode.example.kotlinbitcoinwallet.MainActivity
 import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
 import tbcode.example.kotlinbitcoinwallet.R
+import tbcode.example.kotlinbitcoinwallet.utils.KitSyncService
 
 class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
@@ -32,6 +35,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var amountTxt:EditText
     private lateinit var scanBtn:Button
     private lateinit var sendBtn:Button
+    private lateinit var maxBtn:Button
     private lateinit var bitcoinKit: BitcoinKit
     private lateinit var feeTxt: TextView
     private lateinit var balanceTxt: TextView
@@ -48,11 +52,11 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         balanceTxt =  root.findViewById(R.id.tv_send_balance)
         scanBtn = root.findViewById(R.id.btn_scan)
         sendBtn = root.findViewById(R.id.btn_send)
+        maxBtn = root.findViewById(R.id.btn_max)
 
 
 
-
-        bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
+        bitcoinKit =  KitSyncService.bitcoinKit
         viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
         feeRate = SendViewModel.FEE_RATE.MED
 
@@ -79,7 +83,9 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
            confirmDialogue()
 
         }
-
+    maxBtn.setOnClickListener {
+        calculateMax(viewModel.sendAddress)
+    }
     feeTxt.setOnClickListener{
         feePopup(feeTxt)
     }
@@ -125,7 +131,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     }
 
     private fun parseQR(contents: String): String {
-        var addy:String = ""
+        var addy = ""
         val regex:Regex
         //TODO Accommodate with qr codes that don't start with the address ^ means starting with
         val mainNetPattern = "(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}\$"
@@ -146,6 +152,21 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         }
         return addy
     }
+    private fun calculateMax(address:String?){
+        try {
+          val max=  bitcoinKit.maximumSpendableValue(address, viewModel.getFeeRate(feeRate), viewModel.getPluginData())
+            viewModel.amount = max
+            amountTxt.text = SpannableStringBuilder(viewModel.formatAmount())
+        } catch (e: Exception) {
+            when (e) {
+
+                is SendValueErrors.Dust,
+                is SendValueErrors.EmptyOutputs -> Toast.makeText(this.context, "You need at least ${e.message} satoshis to make an transaction",Toast.LENGTH_SHORT ).show()
+                is AddressFormatException ->Toast.makeText(this.context, "Could not Format Address",Toast.LENGTH_SHORT).show()
+                else -> e.message ?: Toast.makeText(this.context,"Maximum could not be calculated", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
        private fun confirmDialogue(){
          try {
 //TODO Need More Error Checking
@@ -153,15 +174,16 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
              val amountStr = "Amount: ${viewModel.formatAmount()} BTC"
              val feeStr = "Fee: ${viewModel.formatFee()}"
              val finalStr = "Final Amount: ${viewModel.formatTotal()}"
+             val warningStr = "NOTE: Do not Attempt to send tBTC to regular BTC Wallets!"
              val alertDialog = AlertDialog.Builder(this.requireContext())
                      .setTitle("Confirm Your Request")
-                     .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr ")
+                     .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr \n $warningStr")
                      .setPositiveButton("SEND") { _, _ ->
                          try {
                              Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
                              bitcoinKit.validateAddress(viewModel.sendAddress, mutableMapOf())
-                          val tx= bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
-                            sentDialogue(tx.header.hash)
+                           val tx =  bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
+                         sentDialogue(tx.header)
                          } catch (e:SendValueErrors.Dust){
                              Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
                          } catch (e:Exception){
@@ -179,27 +201,38 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
              Toast.makeText(context, "${e.message}", Toast.LENGTH_SHORT).show()
          }
      }
-   private fun sentDialogue(txInfo: ByteArray){
+   private fun sentDialogue(header: Transaction) {
          val alertDialog = AlertDialog.Builder(this.requireContext())
              .setTitle("TRANSACTION SENT!")
-             .setMessage("New Balance:${NumberFormatHelper.cryptoAmountFormat.format( bitcoinKit.balance.spendable/ 100_000_000.0)}" +
+             .setMessage("TX-ID:${NumberFormatHelper.cryptoAmountFormat.format( bitcoinKit.balance.spendable/ 100_000_000.0)}" +
                      "\nCheck your dash to see your new transaction!")
-             .setPositiveButton("OK") { _, _ ->
+             .setPositiveButton("Open Block Explorer") { _, _ ->
 
-               /*  try {
+                 try {
                      val uriStr = "https://mempool.space/testnet/tx/"
+                     val txInfo =header.blockHash
                      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr+txInfo))
                      startActivity(intent)
                  } catch (e:Exception){
                      Toast.makeText(this.requireContext(), "Transaction Request Failed", Toast.LENGTH_SHORT).show()
                  }
-                    */
 
+
+             }
+             .setNegativeButton("OK") { _, _ ->
+                 //TODO go back to dash or refresh
+                 val manager = requireActivity().supportFragmentManager
+
+                 manager.beginTransaction().let {
+                     it.detach(this)
+                     it.commit()
+                 }
+                 manager.executePendingTransactions()
+                 manager.beginTransaction().let {
+                     it.attach(this)
+                     it.commit()
+                 }
              }.create()
-           /*  .setNegativeButton("COPY TX-ID") { _, _ ->
-                 val clipBoard = this.activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-               clipBoard.setPrimaryClip( ClipData.newPlainText("TX-ID", txInfo))
-             }.create()*/
          alertDialog.show()
 
 

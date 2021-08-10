@@ -7,21 +7,24 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
 import android.util.Log
+import tbcode.example.kotlinbitcoinwallet.MainActivity
 
 class KitBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        //TODO Check if the service is not active. If it is stop it, else start the serivce.
         val serviceIntent = Intent(context, KitSyncService::class.java)
         if (context != null && !KitSyncService.isRunning && isOnline(context)) {
-            Log.d("btc-db", "Starting Foreground Service from Receiver")
+            Log.d("btc-alert", "Starting Foreground Service from Receiver")
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
             } else context.startService(serviceIntent)
         }
         else{
-            Log.d("btc-db", "Stopping Foreground Service from Receiver")
-            KitSyncService.stopSync()
+
+            if(!MainActivity.isActive){
+                Log.d("btc-alert", "App is not active. Stopping Foreground Service from Receiver")
+                KitSyncService.stopSync()
+            }
         }
 
 

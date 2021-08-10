@@ -1,5 +1,7 @@
 package tbcode.example.kotlinbitcoinwallet
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -7,11 +9,11 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -21,34 +23,23 @@ import io.github.novacrypto.bip39.MnemonicGenerator
 import io.github.novacrypto.bip39.Words
 import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoincore.BitcoinCore
-import io.horizontalsystems.bitcoincore.core.Bip
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import tbcode.example.kotlinbitcoinwallet.utils.KitBroadcastReceiver
 import tbcode.example.kotlinbitcoinwallet.utils.KitSyncService
-import tbcode.example.kotlinbitcoinwallet.utils.SyncDialogFragment
+import tbcode.example.kotlinbitcoinwallet.utils.builders.BTCKitBuilder
 import java.security.SecureRandom
+import java.util.*
 
-class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
+class MainActivity : AppCompatActivity() {
 
 
     private lateinit var bitcoinKit : BitcoinKit
     companion object {
-
-        private val walletId = "MyWallet"
-        private var networkType = BitcoinKit.NetworkType.TestNet
-        private var syncMode:BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
-        private var bip = Bip.BIP84
-
-
-        fun setNetworkType(type: BitcoinKit.NetworkType){
-            networkType = type
-        }
-        fun setSync(syncMode: BitcoinCore.SyncMode){
-            Companion.syncMode = syncMode
-        }
+        var isActive = false
+       const val timeout = 120000L
     }
-    lateinit var viewModel: MainViewModel
+
     private lateinit var sharedPref: SharedPreferences
-    private  lateinit var syncDialog: SyncDialogFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,29 +55,30 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
 
 
         try {
+                isActive = true
                sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
 
-            if(!sharedPref.contains(walletId)) btcDialog()
-            val words = sharedPref.getString(walletId,null)?.split(" ")
-            Log.d("btc-db","Seed Phrase: ${sharedPref.getString(walletId,"")}")
-            Log.d("btc-db","syncMode: ${syncMode::class.java}")
-            Log.d("btc-db","bip: $bip")
-            bitcoinKit = BitcoinKit(this,words!!, walletId, networkType, syncMode = syncMode, bip = bip)
+            if(!sharedPref.contains(BTCKitBuilder.walletId)) btcDialog()
+            val words = sharedPref.getString(BTCKitBuilder.walletId,null)?.split(" ")
+            Log.d("btc-db","Seed Phrase: ${sharedPref.getString(BTCKitBuilder.walletId,"")}")
+            Log.d("btc-db","syncMode: ${BTCKitBuilder.syncMode::class.java}")
+            Log.d("btc-db","bip: ${BTCKitBuilder.bip}")
+            //bitcoinKit = BitcoinKit(this,words!!, walletId, networkType, syncMode = syncMode, bip = bip)
+            bitcoinKit = BitcoinKit(this,words!!, BTCKitBuilder.walletId,
+                BTCKitBuilder.networkType, syncMode = BTCKitBuilder.syncMode, bip = BTCKitBuilder.bip)
+            KitSyncService.bitcoinKit = bitcoinKit
             if(!isOnline()) throw Exception("No Connection Detected!")
             val serviceIntent = Intent(this, KitSyncService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-                Log.d("btc-db","Starting Foreground Service")
+                Log.d("btc-service","Starting Foreground Service")
                 startForegroundService(serviceIntent)
             } else{
-                Log.d("btc-db","Starting Regular Service")
+                Log.d("btc-service","Starting Regular Service")
                 startService(serviceIntent)
             }
             Log.d("btc-db","Service Component type: ${serviceIntent.component}")
-            viewModel = ViewModelProvider(this, MainViewModelFactory( bitcoinKit)).get(MainViewModel::class.java)
-       //     syncDialog = SyncDialogFragment(viewModel.state, viewModel.lastBlock)
-            syncDialog = SyncDialogFragment(KitSyncService.kitState, KitSyncService.lastBlock)
-            syncDialog.show(supportFragmentManager, "syncDialogue")
-
+       //
+            Log.d("btc-service", "Is service running? : ${KitSyncService.isRunning}")
 
 
         }catch (e:Exception) {
@@ -103,7 +95,7 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
                 .setTitle("Clear Wallet?")
                 .setMessage(" Want to re-sync?(This could take a while")
                 .setPositiveButton("OK"){ _, _->
-                BitcoinKit.clear(this, networkType, walletId)
+                BitcoinKit.clear(this, BTCKitBuilder.networkType, BTCKitBuilder.walletId)
                     bitcoinKit.refresh()
 
                 }.create()
@@ -115,8 +107,8 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         SecureRandom().nextBytes(entropy)
         MnemonicGenerator(English.INSTANCE)
                 .createMnemonic(entropy, sb::append)
-        sharedPref.edit().putString(walletId, sb.toString()).apply()
-        syncMode = BitcoinCore.SyncMode.NewWallet()
+        sharedPref.edit().putString(BTCKitBuilder.walletId, sb.toString()).apply()
+        BTCKitBuilder.syncMode = BitcoinCore.SyncMode.NewWallet()
         val alertDialog = AlertDialog.Builder(this)
             .setTitle("No Wallet found")
             .setMessage("You don't have a wallet yet we'll create one for you!")
@@ -157,4 +149,28 @@ class MainActivity : AppCompatActivity(), BitcoinKit.Listener {
         return networkInfo?.isConnected == true
     }
 
+    override fun onPause() {
+        super.onPause()
+        isActive = false
+        val alarmIntent = Intent(this, KitBroadcastReceiver::class.java).let {
+                i -> PendingIntent.getBroadcast(this, 0, i, 0)
+        }
+
+        val alarmMgr =
+            this.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+        alarmMgr?.set(
+            AlarmManager.ELAPSED_REALTIME,
+            SystemClock.elapsedRealtime() + timeout,
+            alarmIntent
+        )
+        val date = Calendar.getInstance().time
+        val newDate = Date(date.time + timeout)
+        Log.d("btc-alert", "Setting TimeOut to ${newDate}!")
+
+    }
+    override fun onDestroy() {
+        Log.d("btc-alert", "onDestroy is called!")
+        super.onDestroy()
+
+    }
 }
