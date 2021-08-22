@@ -14,6 +14,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -52,7 +53,8 @@ class MainActivity : AppCompatActivity() {
 
         setupActionBarWithNavController(navController,appBarConfiguration)
         navView.setupWithNavController(navController)
-
+        //Disable dark mode
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
         try {
                 isActive = true
@@ -67,7 +69,9 @@ class MainActivity : AppCompatActivity() {
             bitcoinKit = BitcoinKit(this,words!!, BTCKitBuilder.walletId,
                 BTCKitBuilder.networkType, syncMode = BTCKitBuilder.syncMode, bip = BTCKitBuilder.bip)
             KitSyncService.bitcoinKit = bitcoinKit
-            if(!isOnline()) throw Exception("No Connection Detected!")
+            if(!isOnline()){ Log.d("btc-db", "Not connected")
+                throw Exception("No Connection Detected!")
+            }
             val serviceIntent = Intent(this, KitSyncService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
                 Log.d("btc-service","Starting Foreground Service")

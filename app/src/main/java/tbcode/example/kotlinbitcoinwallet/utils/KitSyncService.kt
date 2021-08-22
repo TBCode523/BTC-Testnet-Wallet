@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
@@ -16,18 +17,19 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.kotlinbitcoinwallet.MainActivity
 import tbcode.example.kotlinbitcoinwallet.R
 import tbcode.example.kotlinbitcoinwallet.utils.builders.BTCKitBuilder
+import java.text.SimpleDateFormat
 import java.util.*
 
 class KitSyncService: LifecycleService(), BitcoinKit.Listener {
    private  var manager:NotificationManager? = null
-
+    private val syncId = 1
     companion object {
        //  val walletId = "MyWallet"
        //  var networkType = BitcoinKit.NetworkType.TestNet
     //    var syncMode: BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
      //    var bip = Bip.BIP84
         var progress = ""
-
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         var kit = CryptoKits.BTC
         //Every 15 min.
         var syncTiming = 900000L
@@ -78,10 +80,10 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        manager = createNotificationChannel()
+        manager = NotificationUtils.createNotificationChannel(this)
 
-       val syncNotification = createSyncNoti("0")
-        startForeground(1, syncNotification)
+       val syncNotification = NotificationUtils.createSyncNoti("0", this)
+        startForeground(syncId, syncNotification)
         syncKit()
         return START_STICKY
     }
@@ -90,7 +92,6 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
     private fun syncKit() {
         //Determine the Kit
         Log.d("btc-db", "Starting the Sync...")
-        var progress1 = ""
 
         syncState.observe(this, {
                 state ->
@@ -112,13 +113,18 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
                         else stopForeground(true)
                     }
                     is BitcoinCore.KitState.Syncing -> {
-
+                        lastBlockInfo.observe(this, {
+                            it?.let {
+                                    blockInfo ->  progress +=SpannableStringBuilder("Block-Date: ${dateFormat.format(Date(blockInfo.timestamp * 1000))}\n").toString()
+                                progress += SpannableStringBuilder("Block-Height: ${blockInfo.height}\n").toString()
+                            }
+                        })
                         progress =
                             SpannableStringBuilder("%${"%.2f".format(state.progress * 100)}").toString()
                         //Log.d("btc-service", "${syncState.value}")
                        // Log.d("btc-service", progress)
                        // Log.d("btc-service", "${syncState.hasActiveObservers()}")
-                        manager?.notify(1, createSyncNoti(progress))
+                        manager?.notify(1, NotificationUtils.createSyncNoti(progress, this))
                     }
                     is BitcoinCore.KitState.ApiSyncing -> {
                         Log.d("btc-service", "Api Syncing")
@@ -127,11 +133,15 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
                     }
                     is BitcoinCore.KitState.NotSynced -> {
                         Log.d("btc-service", "Wrecked")
+                        progress = "Unable to sync!"
+                        manager?.notify(1, NotificationUtils.createSyncNoti(progress, this))
+                        Toast.makeText(this, "Unable to Sync!", Toast.LENGTH_SHORT).show()
                         "not synced ${state.exception.javaClass.simpleName}"
                     }
                 }
             }
         })
+
         bitcoinKit.start()
 
 

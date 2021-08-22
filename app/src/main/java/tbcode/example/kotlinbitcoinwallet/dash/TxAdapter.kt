@@ -1,6 +1,5 @@
 package tbcode.example.kotlinbitcoinwallet.dash
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater.from
@@ -47,7 +46,7 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
         return ViewHolder(v)
     }
 
-    @SuppressLint("SetTextI18n")
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val amount = transactions?.get(position)?.let { calculateAmount(it) }!!
         val date = transactions?.get(position)?.timestamp?.let { formatDate(it) }
