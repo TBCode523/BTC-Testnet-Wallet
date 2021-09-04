@@ -2,6 +2,7 @@ package tbcode.example.kotlinbitcoinwallet.dash
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater.from
 import android.view.View
 import android.view.ViewGroup
@@ -50,9 +51,11 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val amount = transactions?.get(position)?.let { calculateAmount(it) }!!
         val date = transactions?.get(position)?.timestamp?.let { formatDate(it) }
+        transactions?.get(position)?.status?.let { Log.d("btc-tx", it.name) }
         when (transactions?.get(position)?.status) {
-            TransactionStatus.NEW -> holder.date.text = "$date (Pending)"
-            TransactionStatus.RELAYED -> holder.date.text = "$date"
+            TransactionStatus.RELAYED -> {
+                holder.date.text = "$date"
+            }
             else -> holder.date.text = "Invalid"
         }
 

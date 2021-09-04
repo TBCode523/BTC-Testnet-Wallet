@@ -28,16 +28,17 @@ object NotificationUtils {
             null
         }
     }
-     fun createSyncNoti(str:String, context: Context): Notification {
+     fun createNotification(str:String, context: Context): Notification {
         val activityIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
         return NotificationCompat.Builder(context, channelID)
             .setContentTitle("BTC Testnet")
-            .setContentText("BitcoinKit is syncing: $str")
+            .setContentText(str)
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentIntent(pendingIntent)
             .setOnlyAlertOnce(false)
             .setNotificationSilent()
             .build()
     }
+
 }

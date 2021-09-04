@@ -94,17 +94,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun clearDialogue() {
-        val alertDialog = AlertDialog.Builder(this)
-                .setTitle("Clear Wallet?")
-                .setMessage(" Want to re-sync?(This could take a while")
-                .setPositiveButton("OK"){ _, _->
-                BitcoinKit.clear(this, BTCKitBuilder.networkType, BTCKitBuilder.walletId)
-                    bitcoinKit.refresh()
 
-                }.create()
-        alertDialog.show()
-    }
     private fun btcDialog(){
         val sb = StringBuilder()
         val entropy = ByteArray(Words.TWELVE.byteLength())
@@ -153,8 +143,10 @@ class MainActivity : AppCompatActivity() {
         return networkInfo?.isConnected == true
     }
 
-    override fun onPause() {
-        super.onPause()
+
+    override fun onDestroy() {
+        Log.d("btc-alert", "onDestroy is called!")
+        super.onDestroy()
         isActive = false
         val alarmIntent = Intent(this, KitBroadcastReceiver::class.java).let {
                 i -> PendingIntent.getBroadcast(this, 0, i, 0)
@@ -170,11 +162,6 @@ class MainActivity : AppCompatActivity() {
         val date = Calendar.getInstance().time
         val newDate = Date(date.time + timeout)
         Log.d("btc-alert", "Setting TimeOut to ${newDate}!")
-
-    }
-    override fun onDestroy() {
-        Log.d("btc-alert", "onDestroy is called!")
-        super.onDestroy()
 
     }
 }

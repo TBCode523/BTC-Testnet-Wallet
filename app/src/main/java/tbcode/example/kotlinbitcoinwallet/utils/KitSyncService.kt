@@ -1,21 +1,21 @@
 package tbcode.example.kotlinbitcoinwallet.utils
 
-import android.app.*
+import android.app.AlarmManager
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.util.Log
-import android.widget.Toast
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import io.horizontalsystems.bitcoincore.BitcoinCore
+import io.horizontalsystems.bitcoincore.models.BalanceInfo
 import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.kotlinbitcoinwallet.MainActivity
-import tbcode.example.kotlinbitcoinwallet.R
+import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
 import tbcode.example.kotlinbitcoinwallet.utils.builders.BTCKitBuilder
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,13 +24,9 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
    private  var manager:NotificationManager? = null
     private val syncId = 1
     companion object {
-       //  val walletId = "MyWallet"
-       //  var networkType = BitcoinKit.NetworkType.TestNet
-    //    var syncMode: BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
-     //    var bip = Bip.BIP84
+
         var progress = ""
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        var kit = CryptoKits.BTC
         //Every 15 min.
         var syncTiming = 900000L
         var syncState = MutableLiveData<BitcoinCore.KitState>()
@@ -54,7 +50,8 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
             )
             val date = Calendar.getInstance().time
             val newDate = Date(date.time + syncTiming)
-
+            if(BTCKitBuilder.syncMode == BitcoinCore.SyncMode.NewWallet())
+                BTCKitBuilder.syncMode = BitcoinCore.SyncMode.Api()
             instance.stopSelf()
             instance.stopForeground(true)
             Log.d("btc-alert", "Service has stopped! Setting Alarm at ${newDate}!")
@@ -69,10 +66,9 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
 
     override fun onCreate() {
         super.onCreate()
-        //TODO enhance this by using the crypto-enum class
         val sharedPref =  this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-        val words = sharedPref.getString(BTCKitBuilder.walletId,null)?.split(" ")
-        bitcoinKit = BTCKitBuilder.createKit(this, words!!)
+        val words = "burst detect lawsuit monitor royal sad guilt dwarf fold notable embark theme".split(" ")
+        bitcoinKit = BTCKitBuilder.createKit(this, words)
         bitcoinKit.listener = this
         syncState.value = bitcoinKit.syncState
         lastBlockInfo.value = bitcoinKit.lastBlockInfo
@@ -82,7 +78,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         super.onStartCommand(intent, flags, startId)
         manager = NotificationUtils.createNotificationChannel(this)
 
-       val syncNotification = NotificationUtils.createSyncNoti("0", this)
+       val syncNotification = NotificationUtils.createNotification("Starting to sync", this)
         startForeground(syncId, syncNotification)
         syncKit()
         return START_STICKY
@@ -101,8 +97,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
                     is BitcoinCore.KitState.Synced -> {
                         Log.d("btc-service", "Synced")
                         progress = "Synced!"
-                        if(BTCKitBuilder.syncMode == BitcoinCore.SyncMode.NewWallet())
-                        BTCKitBuilder.syncMode = BitcoinCore.SyncMode.Api()
+
                     if(!MainActivity.isActive){
                         Log.d("btc-service", "App is not active so Stopping Sync")
 
@@ -113,18 +108,21 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
                         else stopForeground(true)
                     }
                     is BitcoinCore.KitState.Syncing -> {
+                        progress =
+                            SpannableStringBuilder("%${"%.2f".format(state.progress * 100)}").toString()
                         lastBlockInfo.observe(this, {
                             it?.let {
                                     blockInfo ->  progress +=SpannableStringBuilder("Block-Date: ${dateFormat.format(Date(blockInfo.timestamp * 1000))}\n").toString()
                                 progress += SpannableStringBuilder("Block-Height: ${blockInfo.height}\n").toString()
                             }
+                            manager?.notify(1, NotificationUtils.createNotification("Syncing with the Blockchain:$progress", this))
+
                         })
-                        progress =
-                            SpannableStringBuilder("%${"%.2f".format(state.progress * 100)}").toString()
+                      //  progress += lastBlockInfo.value
                         //Log.d("btc-service", "${syncState.value}")
                        // Log.d("btc-service", progress)
                        // Log.d("btc-service", "${syncState.hasActiveObservers()}")
-                        manager?.notify(1, NotificationUtils.createSyncNoti(progress, this))
+                       // manager?.notify(1, NotificationUtils.createNotification("Syncing with the Blockchain:$progress", this))
                     }
                     is BitcoinCore.KitState.ApiSyncing -> {
                         Log.d("btc-service", "Api Syncing")
@@ -132,10 +130,10 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
 
                     }
                     is BitcoinCore.KitState.NotSynced -> {
-                        Log.d("btc-service", "Wrecked")
+                       // Log.d("btc-service", "Wrecked")
                         progress = "Unable to sync!"
-                        manager?.notify(1, NotificationUtils.createSyncNoti(progress, this))
-                        Toast.makeText(this, "Unable to Sync!", Toast.LENGTH_SHORT).show()
+                        manager?.notify(1, NotificationUtils.createNotification("Sync was interrupted!", this))
+                       // Toast.makeText(this, "Unable to Sync!", Toast.LENGTH_SHORT).show()
                         "not synced ${state.exception.javaClass.simpleName}"
                     }
                 }
@@ -153,32 +151,12 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
        syncState.postValue(state)
     }
 
-    private fun createNotificationChannel(): NotificationManager? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(
-                "ChannelID1",
-                "Bitcoin Sync Notification",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(notificationChannel)
-            manager
-        } else {
-            null
-        }
+    override fun onBalanceUpdate(balance: BalanceInfo) {
+        super.onBalanceUpdate(balance)
+        val newBalanceStr = "${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} tBTC"
+        manager?.notify(2,NotificationUtils.createNotification("New Balance: $newBalanceStr", this))
     }
 
-    private fun createSyncNoti(str:String): Notification {
-        val activityIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, activityIntent, 0)
-        return NotificationCompat.Builder(this, "ChannelID1")
-            .setContentTitle("BTC Testnet")
-            .setContentText("BitcoinKit is syncing: $str")
-            .setSmallIcon(R.mipmap.ic_launcher_round)
-            .setContentIntent(pendingIntent)
-            .setOnlyAlertOnce(false)
-            .setNotificationSilent()
-            .build()
-    }
-    fun getKit() = bitcoinKit
+
+
 }
