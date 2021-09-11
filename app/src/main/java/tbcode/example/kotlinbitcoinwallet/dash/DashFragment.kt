@@ -40,15 +40,11 @@ class DashFragment : Fragment(){
         txtNoTransaction.visibility = View.GONE
 
         try {
-     //    bitcoinKit =  (activity as MainActivity).viewModel.bitcoinKit
-            bitcoinKit = if(KitSyncService.isRunning){
-                Log.d("btc-dash","Is kit active?: ${KitSyncService.bitcoinKit.statusInfo()}")
-                KitSyncService.bitcoinKit
-            } else KitSyncService.bitcoinKit
-       //     Log.d("btc-kit","${bitcoinKit.statusInfo()}")
+
+            //Log.d("btc-dash", "Kit: ${bitcoinKit.syncState}")
            
         }catch (e:Exception){
-            Toast.makeText(context,"${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(context,"Dashboard Error:${e.message}", Toast.LENGTH_LONG).show()
         }
         return root
     }
@@ -58,7 +54,7 @@ class DashFragment : Fragment(){
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
-          //  bitcoinKit = KitSyncService.instance.getKit()
+            bitcoinKit = KitSyncService.bitcoinKit
             viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
 
             viewModel.getBalance(bitcoinKit)
@@ -90,5 +86,9 @@ class DashFragment : Fragment(){
 
     }
 
+    override fun onDestroy() {
+        Log.d("btc-dash", "Dash onDestroy is called")
+        super.onDestroy()
+    }
 
 }

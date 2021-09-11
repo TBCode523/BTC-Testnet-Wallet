@@ -7,12 +7,12 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 
 object BTCKitBuilder {
 
-        val walletId = "MyWallet"
+        const val walletId = "MyWallet"
         var networkType = BitcoinKit.NetworkType.TestNet
         var syncMode: BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
         var bip = Bip.BIP84
         fun createKit(context: Context, words: List<String>): BitcoinKit{
-            return BitcoinKit(context, words,  walletId,
+            return BitcoinKit(context, words,  "",walletId,
                 networkType, syncMode = syncMode, bip = bip)
 
     }

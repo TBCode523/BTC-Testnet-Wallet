@@ -14,6 +14,7 @@ import tbcode.example.kotlinbitcoinwallet.R
 object NotificationUtils {
     private const val channelID = "ChannelID1"
     private const val channelName = "Testnet Notification"
+
      fun createNotificationChannel(context: Context): NotificationManager? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
@@ -28,17 +29,44 @@ object NotificationUtils {
             null
         }
     }
-     fun createNotification(str:String, context: Context): Notification {
+     fun createSyncNotification(progressStr:String, blockStr:String, context: Context): Notification {
         val activityIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
         return NotificationCompat.Builder(context, channelID)
             .setContentTitle("BTC Testnet")
-            .setContentText(str)
+            .setContentText(progressStr)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(progressStr+blockStr))
+            .setOnlyAlertOnce(false)
+            .setNotificationSilent()
+            .build()
+    }
+    fun createBaseNotification(notiStr:String, context: Context): Notification{
+        val activityIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
+        return NotificationCompat.Builder(context, channelID)
+            .setContentTitle("BTC Testnet")
+            .setContentText(notiStr)
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentIntent(pendingIntent)
             .setOnlyAlertOnce(false)
             .setNotificationSilent()
             .build()
     }
+    fun createBalanceNotification(balanceStr:String, context: Context): Notification{
+        val activityIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
+        return NotificationCompat.Builder(context, channelID)
+            .setContentTitle("BTC Testnet")
+            .setContentText("Transaction has confirmed!")
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(balanceStr))
+            .setOnlyAlertOnce(false)
+            .setNotificationSilent()
+            .build()
+    }
+
 
 }
