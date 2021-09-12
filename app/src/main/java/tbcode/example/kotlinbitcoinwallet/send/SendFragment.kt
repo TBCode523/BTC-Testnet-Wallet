@@ -56,9 +56,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
 
 
-        bitcoinKit =  KitSyncService.bitcoinKit
-        viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
-        feeRate = SendViewModel.FEE_RATE.MED
+
 
 
         return root
@@ -68,8 +66,10 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        feeTxt.text = "${feeRate.name} ${viewModel.formattedFee}"
+        bitcoinKit =  KitSyncService.bitcoinKit
+        viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
+        feeRate = SendViewModel.FEE_RATE.MED
+        feeTxt.text = feeRate.name + viewModel.formattedFee
         sendTxt.text =SpannableStringBuilder( viewModel.sendAddress)
         amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
         balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(bitcoinKit.balance.spendable / 100_000_000.0)} BTC" )
@@ -133,7 +133,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private fun parseQR(contents: String): String {
         var addy = ""
         val regex:Regex
-        //TODO Accommodate with qr codes that don't start with the address ^ means starting with
         val mainNetPattern = "(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}\$"
         val testNetPattern = "(tb1|[nm2])[a-zA-HJ-NP-Z0-9]{25,39}\$"
         regex = if(bitcoinKit.networkName==BitcoinKit.NetworkType.TestNet.name) Regex(testNetPattern)
@@ -169,7 +168,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     }
        private fun confirmDialogue(){
          try {
-//TODO Need More Error Checking
              val sendAddressStr: String = "To: " + viewModel.sendAddress
              val amountStr = "Amount: ${viewModel.formatAmount()} BTC"
              val feeStr = "Fee: ${viewModel.formatFee()}"

@@ -46,27 +46,31 @@ class ReceiveFragment : Fragment() {
 
          qrCode= root.findViewById(R.id.qr_code)
          generateBtn = root.findViewById(R.id.generate_btn)
-        viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
-      //  checkBox = root.findViewById(R.id.dialog_checkBox)
-        try {
-            sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-            if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
+        sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
+        if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
 
-            receiveClick()
-        }catch (e:Exception){
-            Toast.makeText(context,"Wallet is Null",Toast.LENGTH_LONG).show()
-        }
-        generateBtn.setOnClickListener {
-            receiveClick()
-            }
 
         return root
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        try {
+            bitcoinKit =  KitSyncService.bitcoinKit
+            viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
+            receiveClick()
+            generateBtn.setOnClickListener {
+                receiveClick()
+            }
+        } catch (e:Exception){
+            Toast.makeText(context,"Wallet is Null",Toast.LENGTH_LONG).show()
+        }
+
+    }
     private fun receiveClick() {
 
         try {
-            bitcoinKit =  KitSyncService.bitcoinKit
+
             val generatedAddress: String = viewModel.generateAddress(bitcoinKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
@@ -80,7 +84,7 @@ class ReceiveFragment : Fragment() {
 
             receiveTxt.text = generatedAddress
 
-          //  Log.v("Wallet", "Creating Wallet $walletNum")
+          //  Log.d("Wallet", "Creating Wallet $walletNum")
 
             Toast.makeText(
                 this.context,
