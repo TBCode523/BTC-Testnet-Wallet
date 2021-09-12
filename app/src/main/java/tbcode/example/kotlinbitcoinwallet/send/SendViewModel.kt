@@ -72,7 +72,7 @@ class SendViewModel : ViewModel() {
         } catch (e:Exception){
             0
         }
-        formattedFee = "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} BTC"
+        formattedFee = "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
         Log.d("SF-SVM","Generated fee:$formattedFee")
         return fee
     }
@@ -88,10 +88,10 @@ class SendViewModel : ViewModel() {
         return NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)
     }
     fun formatFee():String{
-        return  "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} BTC"
+        return  "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
     }
     fun formatTotal():String{
-        return  "${NumberFormatHelper.cryptoAmountFormat.format((fee+amount) / 100_000_000.0)} BTC"
+        return  "${NumberFormatHelper.cryptoAmountFormat.format((fee+amount) / 100_000_000.0)} tBTC"
     }
     fun getPluginData(): MutableMap<Byte, IPluginData> {
         val pluginData = mutableMapOf<Byte, IPluginData>()

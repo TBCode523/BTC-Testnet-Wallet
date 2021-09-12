@@ -69,10 +69,10 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         bitcoinKit =  KitSyncService.bitcoinKit
         viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
         feeRate = SendViewModel.FEE_RATE.MED
-        feeTxt.text = feeRate.name + viewModel.formattedFee
+        feeTxt.text = SpannableStringBuilder(feeRate.name +" " + viewModel.formattedFee +" tBTC")
         sendTxt.text =SpannableStringBuilder( viewModel.sendAddress)
         amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
-        balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(bitcoinKit.balance.spendable / 100_000_000.0)} BTC" )
+        balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(bitcoinKit.balance.spendable / 100_000_000.0)} tBTC" )
         scanBtn.setOnClickListener{
 
             val scanner = IntentIntegrator(this.activity)
