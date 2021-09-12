@@ -53,8 +53,11 @@ class TxAdapter( var transactions: List<TransactionInfo>?) : RecyclerView.Adapte
         val date = transactions?.get(position)?.timestamp?.let { formatDate(it) }
         transactions?.get(position)?.status?.let { Log.d("btc-tx", it.name) }
         when (transactions?.get(position)?.status) {
+            TransactionStatus.NEW ->{
+                holder.date.text = date + " (Pending)"
+            }
             TransactionStatus.RELAYED -> {
-                holder.date.text = "$date"
+                holder.date.text = date
             }
             else -> holder.date.text = "Invalid"
         }
