@@ -84,7 +84,7 @@ class ReceiveFragment : Fragment() {
 
             receiveTxt.text = generatedAddress
 
-          //  Log.d("Wallet", "Creating Wallet $walletNum")
+
 
             Toast.makeText(
                 this.context,
@@ -151,7 +151,6 @@ class ReceiveFragment : Fragment() {
          alertDialog.show()
      }*/
     private fun warningDialogue(){
-        val isChecked = false
         val view= View.inflate(this.requireContext(), R.layout.dialog_checkbox, null)
          checkBox = view.findViewById(R.id.dialog_checkBox)
         AlertDialog.Builder(this.requireContext())
