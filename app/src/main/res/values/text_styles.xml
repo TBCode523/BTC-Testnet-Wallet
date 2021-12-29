@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TimeText" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#555</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+    <!-- TODO get fonts-->
+    <style name="AmountText" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#000</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="SendText" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#000</item>
+        <item name="android:textSize">25sp</item>
+    </style>
+    <style name="SendEditText" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#000</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+</resources>

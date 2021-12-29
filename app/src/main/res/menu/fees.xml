@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item android:title="@string/high_fee" android:id="@+id/high_fee"/>
+    <item android:title="@string/medium_fee" android:id="@+id/med_fee"/>
+    <item android:title="@string/low_fee" android:id="@+id/low_fee"/>
+</menu>

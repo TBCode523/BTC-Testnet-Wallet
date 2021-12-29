@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">BTC Testnet Wallet</string>
+    <string name="btc_address">BTC Address</string>
+    <string name="generate_address">Generate Address</string>
+    <string name="address_qr_code">Address QR Code</string>
+    <string name="create_qr_code">Create QR CODE</string>
+    <string name="scan_qr_code">Scan QR CODE</string>
+    <string name="recipient_address">Recipient Address</string>
+    <string name="amount_in_btc">Amount in BTC</string>
+    <string name="send">Send</string>
+    <string name="starting_amount">0.00</string>
+    <string name="starting_balance">0.00 tBTC</string>
+    <string name="high_fee">HIGH</string>
+    <string name="medium_fee">MEDIUM</string>
+    <string name="low_fee">LOW</string>
+    <string name="fee_priority">Fee Priority:</string>
+    <string name="example_text">Example Text</string>
+    <string name="sent_or_receive">Sent or Receive</string>
+    <string name="address">Address:</string>
+    <string name="amount">Amount:</string>
+    <string name="current_balance">Current Balance:</string>
+    <string name="max">MAX</string>
+    <string name="don_t_remind_me_again">Don\'t remind me again</string>
+</resources>
