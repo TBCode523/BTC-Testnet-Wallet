@@ -1,4 +1,4 @@
-package tbcode.example.kotlinbitcoinwallet.utils.builders
+package tbcode.example.kotlinbitcoinwallet.utils.kit_builders
 
 import android.content.Context
 import io.horizontalsystems.bitcoincore.BitcoinCore

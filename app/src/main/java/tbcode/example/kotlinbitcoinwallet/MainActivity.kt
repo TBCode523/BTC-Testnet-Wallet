@@ -22,7 +22,7 @@ import io.github.novacrypto.bip39.Words
 import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.kotlinbitcoinwallet.utils.KitSyncService
-import tbcode.example.kotlinbitcoinwallet.utils.builders.BTCKitBuilder
+import tbcode.example.kotlinbitcoinwallet.utils.kit_builders.BTCKitBuilder
 import java.security.SecureRandom
 
 class MainActivity : AppCompatActivity() {

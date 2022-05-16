@@ -21,6 +21,7 @@ import io.horizontalsystems.bitcoincore.exceptions.AddressFormatException
 import io.horizontalsystems.bitcoincore.managers.SendValueErrors
 import io.horizontalsystems.bitcoincore.models.Transaction
 import io.horizontalsystems.bitcoincore.models.TransactionDataSortType
+import io.horizontalsystems.bitcoincore.storage.FullTransaction
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
 import tbcode.example.kotlinbitcoinwallet.R
@@ -95,9 +96,10 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
        amountTxt.doOnTextChanged { text, _, _, _ ->
            viewModel.amount = (text.toString().toDouble() * viewModel.sats).toLong()
            Log.d("SF", "Amount changed to: ${viewModel.amount}")
-           viewModel.generateFee(bitcoinKit, feeRate)
-
-           feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formattedFee}")
+           if( viewModel.amount > 0 && !viewModel.generateFee(bitcoinKit, feeRate)){
+               Toast.makeText(this.context,"Error: ${viewModel.errorMsg}", Toast.LENGTH_SHORT).show()
+           }
+           feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
        }
 
     }
@@ -169,7 +171,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
        private fun confirmDialogue(){
          try {
              val sendAddressStr: String = "To: " + viewModel.sendAddress
-             val amountStr = "Amount: ${viewModel.formatAmount()} BTC"
+             val amountStr = "Amount: ${viewModel.formatAmount()}"
              val feeStr = "Fee: ${viewModel.formatFee()}"
              val finalStr = "Final Amount: ${viewModel.formatTotal()}"
              val warningStr = "NOTE: Do not Attempt to send tBTC to regular BTC Wallets!"
@@ -181,7 +183,13 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                              Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
                              bitcoinKit.validateAddress(viewModel.sendAddress, mutableMapOf())
                            val tx =  bitcoinKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
-                         sentDialogue(tx.header)
+                             Log.d("SF", "Transaction str: $tx")
+                             Log.d( "SF","txInfo: ${tx.header.serializedTxInfo}")
+                             Log.d( "SF","meta-hash: ${tx.metadata.transactionHash}")
+                             Log.d("SF","header-hash: ${tx.header.hash}")
+                             Log.d("SF", "Transaction type: ${tx.metadata.type}")
+
+                         sentDialogue(tx)
                          } catch (e:SendValueErrors.Dust){
                              Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
                          } catch (e:Exception){
@@ -199,26 +207,12 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
              Toast.makeText(context, "${e.message}", Toast.LENGTH_SHORT).show()
          }
      }
-   private fun sentDialogue(header: Transaction) {
+   private fun sentDialogue(tx: FullTransaction) {
          val alertDialog = AlertDialog.Builder(this.requireContext())
              .setTitle("TRANSACTION SENT!")
              .setMessage("TX-ID:${NumberFormatHelper.cryptoAmountFormat.format( bitcoinKit.balance.spendable/ 100_000_000.0)}" +
                      "\nCheck your dash to see your new transaction!")
-             .setPositiveButton("Open Block Explorer") { _, _ ->
-
-                 try {
-                     val uriStr = "https://mempool.space/testnet/tx/"
-                     val txInfo =header.blockHash
-                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr+txInfo))
-                     startActivity(intent)
-                 } catch (e:Exception){
-                     Toast.makeText(this.requireContext(), "Transaction Request Failed", Toast.LENGTH_SHORT).show()
-                 }
-
-
-             }
-             .setNegativeButton("OK") { _, _ ->
-                 //TODO go back to dash or refresh
+             .setPositiveButton("OK") { _, _ ->
                  val manager = requireActivity().supportFragmentManager
 
                  manager.beginTransaction().let {
@@ -230,6 +224,8 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                      it.attach(this)
                      it.commit()
                  }
+
+
              }.create()
          alertDialog.show()
 

@@ -2,7 +2,7 @@ package tbcode.example.kotlinbitcoinwallet.utils
 
 import android.content.Context
 import io.horizontalsystems.bitcoincore.AbstractKit
-import tbcode.example.kotlinbitcoinwallet.utils.builders.BTCKitBuilder
+import tbcode.example.kotlinbitcoinwallet.utils.kit_builders.BTCKitBuilder
 
 enum class CryptoKits {
 BTC {

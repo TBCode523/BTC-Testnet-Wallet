@@ -17,7 +17,7 @@ import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.kotlinbitcoinwallet.MainActivity
 import tbcode.example.kotlinbitcoinwallet.NumberFormatHelper
-import tbcode.example.kotlinbitcoinwallet.utils.builders.BTCKitBuilder
+import tbcode.example.kotlinbitcoinwallet.utils.kit_builders.BTCKitBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -62,10 +62,14 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
                     "Next Sync will occur at: $newDate",
                     Toast.LENGTH_LONG
                 ).show()
-                Log.d("btc-alert", "Kit has stopped! Setting Alarm at ${newDate}!")
+
             }
             instance.stopSelf()
-
+            Log.d("btc-alert", "Kit has stopped! Setting Alarm at ${alarmMgr?.nextAlarmClock?.triggerTime?.let {
+                Date(
+                    it
+                )
+            }}!")
 
 
         }

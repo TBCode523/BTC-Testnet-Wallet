@@ -59,7 +59,9 @@ class DashFragment : Fragment(){
 
             viewModel.getBalance(bitcoinKit)
             viewModel.getTransactions(bitcoinKit)
-
+            Log.d("DF", "Unspendable: ${bitcoinKit.balance.unspendable}")
+            Log.d("DF", "Spendable: ${bitcoinKit.balance.spendable}")
+            Log.d("DF", "Unspendable + Spendable: ${bitcoinKit.balance.spendable + bitcoinKit.balance.unspendable}")
             viewModel.balance.observe(viewLifecycleOwner, Observer { balance ->
                 when (balance) {
                     null -> txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
