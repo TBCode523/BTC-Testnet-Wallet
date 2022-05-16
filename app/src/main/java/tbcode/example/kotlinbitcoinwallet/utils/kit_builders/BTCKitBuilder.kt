@@ -13,7 +13,7 @@ object BTCKitBuilder {
         var bip = Bip.BIP84
         fun createKit(context: Context, words: List<String>): BitcoinKit{
             return BitcoinKit(context, words,  "",walletId,
-                networkType, syncMode = syncMode, bip = bip)
+                networkType, syncMode = syncMode, bip = Bip.BIP84)
 
     }
 
