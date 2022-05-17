@@ -8,12 +8,13 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 object BTCKitBuilder {
 
         const val walletId = "MyWallet"
+        const val name = "bitcoin"
         var networkType = BitcoinKit.NetworkType.TestNet
         var syncMode: BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
         var bip = Bip.BIP84
         fun createKit(context: Context, words: List<String>): BitcoinKit{
             return BitcoinKit(context, words,  "",walletId,
-                networkType, syncMode = syncMode, bip = Bip.BIP84)
+                networkType, syncMode = syncMode, bip = bip)
 
     }
 

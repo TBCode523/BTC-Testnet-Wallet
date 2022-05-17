@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -33,9 +34,10 @@ class ReceiveFragment : Fragment() {
     private lateinit var receiveTxt: TextView
     private lateinit var qrCode: ImageView
     private lateinit var generateBtn:Button
-    private lateinit var bitcoinKit: BitcoinKit
+    private lateinit var cryptoKit: BitcoinKit
     private lateinit var sharedPref: SharedPreferences
     private  lateinit var  checkBox: CheckBox
+    private lateinit var amountTxt:EditText
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -43,7 +45,7 @@ class ReceiveFragment : Fragment() {
 
         val root = inflater.inflate(R.layout.receive_fragment, container, false)
          receiveTxt = root.findViewById(R.id.tv_Receive)
-
+        amountTxt = root.findViewById(R.id.ev_amount_rf)
          qrCode= root.findViewById(R.id.qr_code)
          generateBtn = root.findViewById(R.id.generate_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
@@ -56,30 +58,43 @@ class ReceiveFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
-            bitcoinKit =  KitSyncService.bitcoinKit
+            cryptoKit =  KitSyncService.bitcoinKit
             viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
             receiveClick()
             generateBtn.setOnClickListener {
-                receiveClick()
+                Log.d("RF","QR-Amount: " + amountTxt.text)
+                receiveClick(amount = amountTxt.text.toString())
             }
+            amountTxt.setOnEditorActionListener { _, i, _ ->
+                if (i == EditorInfo.IME_ACTION_DONE) {
+                    receiveClick(amount = amountTxt.text.toString())
+                    true
+                }
+                else false
+            }
+
         } catch (e:Exception){
             Toast.makeText(context,"Wallet is Null",Toast.LENGTH_LONG).show()
         }
 
     }
-    private fun receiveClick() {
+    private fun receiveClick(amount: String = "") {
 
         try {
 
-            val generatedAddress: String = viewModel.generateAddress(bitcoinKit)
+            val generatedAddress: String = viewModel.generateAddress(cryptoKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
           if(sharedPref.getBoolean("warning", true)) warningDialogue()
 
 
             CoroutineScope(IO).launch {
+                if (amount.isBlank())
+                generateQRCode("bitcoin:$generatedAddress")
 
-                generateQRCode(generatedAddress)
+                else generateQRCode("bitcoin:$generatedAddress?amount=$amount")
+                    //generateQRCode("bitcoin:19vjucroaCAd2ZdkAEmeVLnKaTPeYdgN19?amount=$amount")
+
             }
 
             receiveTxt.text = generatedAddress
