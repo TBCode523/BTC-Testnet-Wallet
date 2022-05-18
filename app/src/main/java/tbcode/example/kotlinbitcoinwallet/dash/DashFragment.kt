@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -27,7 +26,7 @@ class DashFragment : Fragment(){
     private lateinit var recyclerView: RecyclerView
     private lateinit var txtBalance: TextView
     private lateinit var txtNoTransaction:TextView
-    private lateinit var bitcoinKit: BitcoinKit
+    private lateinit var cryptoKit: BitcoinKit
     private lateinit var adapter: TxAdapter
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,16 +45,16 @@ class DashFragment : Fragment(){
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
-            bitcoinKit = KitSyncService.bitcoinKit
+            cryptoKit = KitSyncService.bitcoinKit
 
             viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
 
-            viewModel.getBalance(bitcoinKit)
-            viewModel.getTransactions(bitcoinKit)
-            Log.d("DF", "Unspendable: ${bitcoinKit.balance.unspendable}")
-            Log.d("DF", "Spendable: ${bitcoinKit.balance.spendable}")
-            Log.d("DF", "Block-Height: ${bitcoinKit.lastBlockInfo?.height}")
-            Log.d("DF", "Unspendable + Spendable: ${bitcoinKit.balance.spendable + bitcoinKit.balance.unspendable}")
+            viewModel.getBalance(cryptoKit)
+            viewModel.getTransactions(cryptoKit)
+            Log.d("DF", "Unspendable: ${cryptoKit.balance.unspendable}")
+            Log.d("DF", "Spendable: ${cryptoKit.balance.spendable}")
+            Log.d("DF", "Block-Height: ${cryptoKit.lastBlockInfo?.height}")
+            Log.d("DF", "Unspendable + Spendable: ${cryptoKit.balance.spendable + cryptoKit.balance.unspendable}")
             viewModel.balance.observe(viewLifecycleOwner, Observer { balance ->
                 when (balance) {
                     null -> txtBalance.text = SpannableStringBuilder("0 tBTC: wallet can't be found")
@@ -70,7 +69,7 @@ class DashFragment : Fragment(){
                 }
             })
 
-            adapter = TxAdapter(viewModel.transactions.value, bitcoinKit.lastBlockInfo, "tBTC")
+            adapter = TxAdapter(viewModel.transactions.value, cryptoKit.lastBlockInfo, "tBTC")
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
 
