@@ -38,14 +38,6 @@ class DashFragment : Fragment(){
         txtBalance = root.findViewById(R.id.tv_Balance)
         txtNoTransaction = root.findViewById(R.id.tv_NoTransaction)
         txtNoTransaction.visibility = View.GONE
-
-        try {
-
-            //Log.d("btc-dash", "Kit: ${bitcoinKit.syncState}")
-           
-        }catch (e:Exception){
-            Toast.makeText(context,"Dashboard Error:${e.message}", Toast.LENGTH_LONG).show()
-        }
         return root
     }
 
@@ -55,16 +47,18 @@ class DashFragment : Fragment(){
         super.onActivityCreated(savedInstanceState)
         try {
             bitcoinKit = KitSyncService.bitcoinKit
+
             viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
 
             viewModel.getBalance(bitcoinKit)
             viewModel.getTransactions(bitcoinKit)
             Log.d("DF", "Unspendable: ${bitcoinKit.balance.unspendable}")
             Log.d("DF", "Spendable: ${bitcoinKit.balance.spendable}")
+            Log.d("DF", "Block-Height: ${bitcoinKit.lastBlockInfo?.height}")
             Log.d("DF", "Unspendable + Spendable: ${bitcoinKit.balance.spendable + bitcoinKit.balance.unspendable}")
             viewModel.balance.observe(viewLifecycleOwner, Observer { balance ->
                 when (balance) {
-                    null -> txtBalance.text = SpannableStringBuilder("0 BTC: wallet can't be found")
+                    null -> txtBalance.text = SpannableStringBuilder("0 tBTC: wallet can't be found")
                     else -> txtBalance.text = SpannableStringBuilder("${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} tBTC")
                 }
             })
@@ -76,7 +70,7 @@ class DashFragment : Fragment(){
                 }
             })
 
-            adapter = TxAdapter(viewModel.transactions.value)
+            adapter = TxAdapter(viewModel.transactions.value, bitcoinKit.lastBlockInfo, "tBTC")
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
 
