@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
+import io.horizontalsystems.bitcoincore.DustCalculator
 import io.horizontalsystems.bitcoincore.core.IPluginData
 import io.horizontalsystems.bitcoincore.managers.SendValueErrors
 import io.horizontalsystems.bitcoinkit.BitcoinKit
@@ -65,7 +66,12 @@ class SendViewModel : ViewModel() {
             errorMsg = "Insufficient Balance"
             0
         }
-        catch (e: Exception){
+        catch (e: SendValueErrors.Dust){
+            Log.d("SF-SVM", "generateFee Error: $e")
+            errorMsg = "You must send at least 0.00001 tBTC"
+            0
+        }
+        catch (e: Error){
             Log.d("SF-SVM", "generateFee Error: $e")
             errorMsg = "Fee Generator Failed"
             0
