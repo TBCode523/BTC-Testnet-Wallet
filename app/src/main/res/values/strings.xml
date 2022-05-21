@@ -4,6 +4,7 @@
     <string name="generate_address">Generate Address</string>
     <string name="address_qr_code">Address QR Code</string>
     <string name="create_qr_code">Create QR CODE</string>
+    <string name="get_coins">Get Coins Here</string>
     <string name="create_new_qr_code">Create New QR CODE</string>
     <string name="scan_qr_code">Scan QR CODE</string>
     <string name="recipient_address">Recipient Address</string>

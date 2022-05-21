@@ -18,7 +18,6 @@ import java.net.URL
 
 class SendViewModel : ViewModel() {
 
-   // private val feeUrl = "https://mempool.space/api/v1/fees/recommended"
     enum class FEE_RATE{LOW, MED, HIGH}
     val sats = 100000000
     private lateinit var feePriority:FeePriority

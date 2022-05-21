@@ -100,8 +100,7 @@ class TxAdapter(var transactions: List<TransactionInfo>?, private val blockInfo:
         transactionInfo.outputs.forEach {
             myOutputsTotalValue += if (it.mine && it.address != null) it.value else 0
         }
-
-        return (myOutputsTotalValue - myInputsTotalValue + (transactionInfo.fee ?: 0))
+        return (myOutputsTotalValue - myInputsTotalValue)
     }
 
     private fun formatDate(timestamp: Long): String {

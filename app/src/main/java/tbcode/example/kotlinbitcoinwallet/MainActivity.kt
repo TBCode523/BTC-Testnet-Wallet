@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -21,17 +22,16 @@ import io.github.novacrypto.bip39.MnemonicGenerator
 import io.github.novacrypto.bip39.Words
 import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import tbcode.example.kotlinbitcoinwallet.receive.ReceiveViewModel
+import tbcode.example.kotlinbitcoinwallet.send.SendViewModel
 import tbcode.example.kotlinbitcoinwallet.utils.KitSyncService
 import tbcode.example.kotlinbitcoinwallet.utils.kit_builders.BTCKitBuilder
 import java.security.SecureRandom
 
 class MainActivity : AppCompatActivity() {
 
-
-    private lateinit var bitcoinKit : BitcoinKit
     companion object {
         var isActive = false
-       const val timeout = 120000L
     }
 
     private lateinit var sharedPref: SharedPreferences
@@ -40,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         Log.d("btc-activity", "MainActivity onCreate is called!")
         setContentView(R.layout.activity_main)
-
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
         val appBarConfiguration = AppBarConfiguration(setOf(R.id.nav_receive, R.id.nav_dash, R.id.nav_send))
@@ -55,15 +54,7 @@ class MainActivity : AppCompatActivity() {
                sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
 
             if(!sharedPref.contains(BTCKitBuilder.walletId)) btcDialog()
-            /* else{val words = sharedPref.getString(BTCKitBuilder.walletId,null)?.split(" ")
-            Log.d("btc-db","Seed Phrase: ${sharedPref.getString(BTCKitBuilder.walletId,"")}")
-            Log.d("btc-db","syncMode: ${BTCKitBuilder.syncMode::class.java}")
-            Log.d("btc-db","bip: ${BTCKitBuilder.bip}")
-            //bitcoinKit = BitcoinKit(this,words!!, walletId, networkType, syncMode = syncMode, bip = bip)
-            bitcoinKit = BitcoinKit(this,words!!, BTCKitBuilder.walletId,
-                BTCKitBuilder.networkType, syncMode = BTCKitBuilder.syncMode, bip = BTCKitBuilder.bip)
-            KitSyncService.bitcoinKit = bitcoinKit
-            }*/
+
             if(!isOnline()){ Log.d("btc-activity", "Not connected")
                 throw Exception("No Connection Detected!")
             }
@@ -76,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                 startService(serviceIntent)
             }
             Log.d("btc-activity","Service Component type: ${serviceIntent.component}")
-       //
+
             Log.d("btc-activity", "Is service running? : ${KitSyncService.isRunning}")
 
 

@@ -72,7 +72,15 @@
             android:text="" />
 
     </LinearLayout>
+    <Button
+        android:id="@+id/faucet_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
 
+        android:layout_marginTop="60dp"
+        android:text="@string/get_coins"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_amount" />
     <Button
         android:id="@+id/generate_btn"
         android:layout_width="wrap_content"
@@ -80,8 +88,6 @@
 
         android:layout_marginTop="60dp"
         android:text="@string/create_new_qr_code"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layout_amount" />
 

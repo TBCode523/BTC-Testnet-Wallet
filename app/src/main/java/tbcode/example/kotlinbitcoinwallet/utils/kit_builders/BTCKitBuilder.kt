@@ -8,7 +8,6 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 object BTCKitBuilder {
 
         const val walletId = "MyWallet"
-        const val label = "tBTC"
         var networkType = BitcoinKit.NetworkType.TestNet
         var syncMode: BitcoinCore.SyncMode = BitcoinCore.SyncMode.Api()
         var bip = Bip.BIP84

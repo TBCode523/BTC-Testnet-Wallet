@@ -2,9 +2,11 @@ package tbcode.example.kotlinbitcoinwallet.receive
 import android.app.AlertDialog
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.zxing.BarcodeFormat
@@ -34,6 +37,7 @@ class ReceiveFragment : Fragment() {
     private lateinit var receiveTxt: TextView
     private lateinit var qrCode: ImageView
     private lateinit var generateBtn:Button
+    private lateinit var faucetBtn:Button
     private lateinit var cryptoKit: BitcoinKit
     private lateinit var sharedPref: SharedPreferences
     private  lateinit var  checkBox: CheckBox
@@ -48,6 +52,7 @@ class ReceiveFragment : Fragment() {
         amountTxt = root.findViewById(R.id.ev_amount_rf)
          qrCode= root.findViewById(R.id.qr_code)
          generateBtn = root.findViewById(R.id.generate_btn)
+        faucetBtn = root.findViewById(R.id.faucet_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
         if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
 
@@ -64,6 +69,11 @@ class ReceiveFragment : Fragment() {
             generateBtn.setOnClickListener {
                 Log.d("RF","QR-Amount: " + amountTxt.text)
                 receiveClick(amount = amountTxt.text.toString())
+            }
+            faucetBtn.setOnClickListener {
+                val uriStr = "https://testnet-faucet.mempool.co/"
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr))
+                ContextCompat.startActivity(requireContext(), intent, null)
             }
             amountTxt.setOnEditorActionListener { _, i, _ ->
                 if (i == EditorInfo.IME_ACTION_DONE) {
@@ -92,8 +102,8 @@ class ReceiveFragment : Fragment() {
                 if (amount.isBlank())
                 generateQRCode("bitcoin:$generatedAddress")
 
-                else generateQRCode("bitcoin:$generatedAddress?amount=$amount")
-                    //generateQRCode("bitcoin:19vjucroaCAd2ZdkAEmeVLnKaTPeYdgN19?amount=$amount")
+                else
+                    generateQRCode("bitcoin:$generatedAddress?amount=$amount")
 
             }
 
@@ -140,31 +150,7 @@ class ReceiveFragment : Fragment() {
             setQRCode(bitmap)
 
         }
-    /*
-    private fun showAllAddresses(bitcoinKit: BitcoinKit){
 
-         val addresses = bitcoinKit.receivePublicKey().used()
-         var str = "Balance: ${wallet.balance}"
-         for (address in addresses){
-             str+="\n"+ (address as SegwitAddress).toBech32()
-         }
-         for(word in wallet.keyChainSeed.mnemonicCode!!) {
-             str += "\n" + word
-         }
-
-         val alertDialog = AlertDialog.Builder(this.requireContext())
-             .setTitle("Used Addresses")
-             .setMessage(str)
-             .setPositiveButton("OK"){ _, _->
-
-
-
-
-
-
-             }.create()
-         alertDialog.show()
-     }*/
     private fun warningDialogue(){
         val view= View.inflate(this.requireContext(), R.layout.dialog_checkbox, null)
          checkBox = view.findViewById(R.id.dialog_checkBox)
