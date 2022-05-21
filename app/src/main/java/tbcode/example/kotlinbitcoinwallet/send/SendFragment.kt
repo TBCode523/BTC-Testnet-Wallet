@@ -200,7 +200,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                              addrTxt.text.clear()
                              viewModel.amount = 0
                              amountTxt.text = SpannableStringBuilder(viewModel.formatAmount())
-                             balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
+                             balanceTxt.text = SpannableStringBuilder("Current Balance: ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
                              maxSw.isChecked = false
                              Toast.makeText(this.requireContext(), "Transaction Sent Check your Dashboard!", Toast.LENGTH_LONG).show()
                          } catch (e:SendValueErrors.Dust){
