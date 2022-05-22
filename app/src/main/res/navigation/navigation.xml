@@ -6,18 +6,18 @@
     app:startDestination="@id/nav_dash">
     <fragment
         android:id="@+id/nav_receive"
-        android:name="tbcode.example.kotlinbitcoinwallet.receive.ReceiveFragment"
+        android:name="tbcode.example.cryptotestnetwallet.receive.ReceiveFragment"
         android:label="Receive"
         tools:layout="@layout/receive_fragment" />
 
     <fragment
         android:id="@+id/nav_send"
-        android:name="tbcode.example.kotlinbitcoinwallet.send.SendFragment"
+        android:name="tbcode.example.cryptotestnetwallet.send.SendFragment"
         android:label="Send"
         tools:layout="@layout/send_fragment" />
     <fragment
         android:id="@+id/nav_dash"
-        android:name="tbcode.example.kotlinbitcoinwallet.dash.DashFragment"
+        android:name="tbcode.example.cryptotestnetwallet.dash.DashFragment"
         android:label="Wallet"
         tools:layout="@layout/dash_fragment" />
 

@@ -6,7 +6,7 @@
     android:layout_marginBottom="30dp"
     android:forceDarkAllowed="false"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="tbcode.example.kotlinbitcoinwallet.dash.DashFragment">
+    tools:context="tbcode.example.cryptotestnetwallet.dash.DashFragment">
 
     <TextView
         android:id="@+id/tv_Balance"

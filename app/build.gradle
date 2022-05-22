@@ -10,11 +10,11 @@ android {
         dataBinding true
     }
     defaultConfig {
-        applicationId "tbcode.example.kotlinbitcoinwallet"
+        applicationId "tbcode.example.cryptotestnetwallet"
         minSdkVersion 23
         targetSdkVersion 32
         versionCode 1
-        versionName "1.0.1"
+        versionName "1.0."
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -32,7 +32,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    namespace 'tbcode.example.kotlinbitcoinwallet'
+    namespace 'tbcode.example.cryptotestnetwallet'
 }
 
 dependencies {

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:forceDarkAllowed="false"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="tbcode.example.kotlinbitcoinwallet.send.SendFragment">
+    tools:context="tbcode.example.cryptotestnetwallet.send.SendFragment">
 
 
 <LinearLayout
