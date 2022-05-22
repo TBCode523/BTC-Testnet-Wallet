@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BTC Testnet Wallet</string>
+    <string name="app_name">Crypto Testnet Wallet</string>
     <string name="btc_address">BTC Address</string>
     <string name="generate_address">Generate Address</string>
     <string name="address_qr_code">Address QR Code</string>
