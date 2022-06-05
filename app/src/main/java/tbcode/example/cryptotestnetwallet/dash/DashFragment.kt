@@ -21,14 +21,13 @@ import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 class DashFragment : Fragment(){
 
-
-
     private lateinit var viewModel: DashViewModel
     private lateinit var recyclerView: RecyclerView
     private lateinit var txtBalance: TextView
     private lateinit var txtNoTransaction:TextView
     private lateinit var cryptoKit: BitcoinKit
     private lateinit var adapter: TxAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,15 +40,11 @@ class DashFragment : Fragment(){
         return root
     }
 
-
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
             cryptoKit = KitSyncService.bitcoinKit
-
             viewModel = ViewModelProvider(this).get(DashViewModel::class.java)
-
             viewModel.getBalance(cryptoKit)
             viewModel.getTransactions(cryptoKit)
             Log.d("DF", "Unspendable: ${cryptoKit.balance.unspendable}")
@@ -76,15 +71,12 @@ class DashFragment : Fragment(){
 
         } catch (e:Exception){
             txtBalance.text = SpannableStringBuilder("0.00 tBTC")
+            Log.d("DF", "Error: ${e.message}")
             txtNoTransaction.visibility = View.VISIBLE
         }
 
 
     }
 
-    override fun onDestroy() {
-        Log.d("btc-dash", "Dash onDestroy is called")
-        super.onDestroy()
-    }
 
 }

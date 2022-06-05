@@ -31,7 +31,7 @@ object NotificationUtils {
     }
      fun createSyncNotification(progressStr:String, blockStr:String, context: Context): Notification {
         val activityIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
+        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(context, channelID)
             .setContentTitle("BTC Testnet")
             .setContentText(progressStr)
@@ -44,7 +44,7 @@ object NotificationUtils {
     }
     fun createBaseNotification(notiStr:String, context: Context): Notification{
         val activityIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
+        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(context, channelID)
             .setContentTitle("BTC Testnet")
             .setContentText(notiStr)
