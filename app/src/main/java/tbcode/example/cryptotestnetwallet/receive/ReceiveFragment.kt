@@ -74,7 +74,14 @@ class ReceiveFragment : Fragment() {
            if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
                receiveClick()
            }
+            else{
+                if(!viewModel.currentAmount.value.isNullOrBlank()){
+                    amountTxt.text = SpannableStringBuilder(viewModel.currentAmount.value)
+                }
+                receiveTxt.text = viewModel.currentAddress.value
+                qrCode.setImageBitmap(viewModel.currentQRCode.value)
 
+           }
             generateBtn.setOnClickListener {
                 Log.d(TAG,"QR-Amount: " + amountTxt.text)
                 receiveClick(amount = amountTxt.text.toString())
