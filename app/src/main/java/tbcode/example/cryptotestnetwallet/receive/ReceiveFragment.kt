@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.SpannableStringBuilder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -44,16 +45,19 @@ class ReceiveFragment : Fragment() {
     private lateinit var sharedPref: SharedPreferences
     private  lateinit var  checkBox: CheckBox
     private lateinit var amountTxt:EditText
+    companion object{
+        const val TAG = "RF"
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
         val root = inflater.inflate(R.layout.receive_fragment, container, false)
-         receiveTxt = root.findViewById(R.id.tv_Receive)
+        receiveTxt = root.findViewById(R.id.tv_Receive)
         amountTxt = root.findViewById(R.id.ev_amount_rf)
-         qrCode= root.findViewById(R.id.qr_code)
-         generateBtn = root.findViewById(R.id.generate_btn)
+        qrCode= root.findViewById(R.id.qr_code)
+        generateBtn = root.findViewById(R.id.generate_btn)
         faucetBtn = root.findViewById(R.id.faucet_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
         if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
@@ -67,9 +71,12 @@ class ReceiveFragment : Fragment() {
         try {
             cryptoKit =  KitSyncService.bitcoinKit
             viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
-            receiveClick()
+           if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
+               receiveClick()
+           }
+
             generateBtn.setOnClickListener {
-                Log.d("RF","QR-Amount: " + amountTxt.text)
+                Log.d(TAG,"QR-Amount: " + amountTxt.text)
                 receiveClick(amount = amountTxt.text.toString())
             }
             faucetBtn.setOnClickListener {
@@ -79,7 +86,10 @@ class ReceiveFragment : Fragment() {
             }
             amountTxt.setOnEditorActionListener { _, i, _ ->
                 if (i == EditorInfo.IME_ACTION_DONE) {
-                    receiveClick(amount = amountTxt.text.toString())
+                    viewModel.currentAmount.value = amountTxt.text.toString()
+                    Log.d(TAG, "currentAmount updated to: ${viewModel.currentAmount.value}")
+                    receiveClick(amount = viewModel.currentAmount.value!!)
+
                     true
                 }
                 else false
@@ -97,25 +107,30 @@ class ReceiveFragment : Fragment() {
             val generatedAddress: String = viewModel.generateAddress(cryptoKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
-          if(sharedPref.getBoolean("warning", true)) warningDialogue()
+            if(sharedPref.getBoolean("warning", true)) warningDialogue()
 
 
-            CoroutineScope(IO).launch {
+           /* CoroutineScope(IO).launch {
                 if (amount.isBlank())
                 generateQRCode("bitcoin:$generatedAddress")
 
                 else
                     generateQRCode("bitcoin:$generatedAddress?amount=$amount")
 
-            }
+            }*/
+            if (amount.isBlank()) viewModel.generateQRCode("bitcoin:$generatedAddress")
+            else viewModel.generateQRCode("bitcoin:$generatedAddress?amount=$amount")
 
-            receiveTxt.text = generatedAddress
-
+            Log.d(TAG, "generatedAddress: $generatedAddress")
+            Log.d(TAG, "currentAddress: ${viewModel.currentAddress.value}")
+            Log.d(TAG, "currentQRCode: ${viewModel.currentQRCode.value}")
+            receiveTxt.text = viewModel.currentAddress.value
+            qrCode.setImageBitmap(viewModel.currentQRCode.value)
 
 
             Toast.makeText(
                 this.context,
-                "QRCode Successfully Generated: ${viewModel.currentAddressString}",
+                "QRCode Successfully Generated: ${viewModel.currentAddress.value}",
                 Toast.LENGTH_SHORT
             ).show()
 
@@ -126,7 +141,7 @@ class ReceiveFragment : Fragment() {
     }
 
 
-    private suspend fun setQRCode(bitmap: Bitmap){
+   /* private suspend fun setQRCode(bitmap: Bitmap){
 
         withContext(Main){
 
@@ -149,10 +164,11 @@ class ReceiveFragment : Fragment() {
                 Log.d(TAG, "generateQRCode: ${e.message}")
 
             }
+
             setQRCode(bitmap)
 
         }
-
+*/
     private fun warningDialogue(){
         val view= View.inflate(this.requireContext(), R.layout.dialog_checkbox, null)
          checkBox = view.findViewById(R.id.dialog_checkBox)

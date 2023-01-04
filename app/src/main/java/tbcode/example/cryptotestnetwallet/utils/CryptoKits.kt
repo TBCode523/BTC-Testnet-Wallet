@@ -3,8 +3,8 @@ package tbcode.example.cryptotestnetwallet.utils
 import android.content.Context
 import io.horizontalsystems.bitcoincore.AbstractKit
 import io.horizontalsystems.bitcoincore.BitcoinCore
-import io.horizontalsystems.bitcoincore.core.Bip
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import io.horizontalsystems.hdwalletkit.HDWallet
 
 enum class CryptoKits {
 T_BTC {
@@ -21,7 +21,7 @@ T_BTC {
             walletId,
             BitcoinKit.NetworkType.TestNet,
             syncMode = BitcoinCore.SyncMode.Api(),
-            bip = Bip.BIP84
+            purpose = HDWallet.Purpose.BIP84
         )
     }
 

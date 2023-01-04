@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import io.horizontalsystems.bitcoincore.BitcoinCore
-import io.horizontalsystems.bitcoincore.core.Bip
 import io.horizontalsystems.bitcoincore.models.BalanceInfo
 import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
@@ -103,7 +102,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         super.onStartCommand(intent, flags, startId)
         manager = NotificationUtils.createNotificationChannel(this)
 
-       val syncNotification = NotificationUtils.createBaseNotification("Starting to Sync!", this)
+        val syncNotification = NotificationUtils.createBaseNotification("Starting to Sync!", this)
         startForeground(syncId, syncNotification)
         syncKit()
         return START_STICKY

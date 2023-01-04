@@ -43,9 +43,8 @@ class SendViewModel : ViewModel() {
         }
     }
       private fun generateFeePriority(feeUrl: String = "https://mempool.space/api/v1/fees/recommended"): FeePriority {
-
         val response = URL(feeUrl).readText()
-          Log.d("SF-SVM","URL Response: $response")
+        Log.d("SF-SVM", "URL Response: $response")
         val gson = Gson()
         return gson.fromJson(response, FeePriority::class.java)
     }
