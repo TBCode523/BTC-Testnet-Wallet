@@ -75,9 +75,6 @@ class ReceiveFragment : Fragment() {
                receiveClick()
            }
             else{
-                if(!viewModel.currentAmount.value.isNullOrBlank()){
-                    amountTxt.text = SpannableStringBuilder(viewModel.currentAmount.value)
-                }
                 receiveTxt.text = viewModel.currentAddress.value
                 qrCode.setImageBitmap(viewModel.currentQRCode.value)
 
@@ -93,10 +90,7 @@ class ReceiveFragment : Fragment() {
             }
             amountTxt.setOnEditorActionListener { _, i, _ ->
                 if (i == EditorInfo.IME_ACTION_DONE) {
-                    viewModel.currentAmount.value = amountTxt.text.toString()
-                    Log.d(TAG, "currentAmount updated to: ${viewModel.currentAmount.value}")
-                    receiveClick(amount = viewModel.currentAmount.value!!)
-
+                    receiveClick(amount = amountTxt.text.toString())
                     true
                 }
                 else false

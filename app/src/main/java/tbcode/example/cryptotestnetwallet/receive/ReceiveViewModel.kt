@@ -23,7 +23,6 @@ class ReceiveViewModel : ViewModel() {
     val currentAddress:LiveData<String>
             get() = _currentAddress
 
-    val currentAmount = MutableLiveData<String>()
 
     private val _currentQRCode = MutableLiveData<Bitmap>()
     val currentQRCode:LiveData<Bitmap>
