@@ -93,7 +93,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
         amountTxt.doOnTextChanged { text, _, _, _ ->
            if( text!!.isNotBlank()){
-               viewModel.amount = (text.toString().toDouble() * viewModel.sats).toLong()
+               viewModel.amount = (text.toString().toDouble() * SendViewModel.sats).toLong()
             }
 
             Log.d("SF", "Amount changed to: ${viewModel.amount}")
@@ -222,7 +222,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
      }
 
     private fun feePopup(v:View){
-    val feePopup = PopupMenu(context,v)
+        val feePopup = PopupMenu(context,v)
         feePopup.setOnMenuItemClickListener(this)
         feePopup.inflate(R.menu.fees)
         feePopup.show()

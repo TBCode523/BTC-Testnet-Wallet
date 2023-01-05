@@ -18,7 +18,7 @@ import java.net.URL
 class SendViewModel : ViewModel() {
 
     enum class FEE_RATE{LOW, MED, HIGH}
-    val sats = 100000000
+
     private lateinit var feePriority:FeePriority
     var sendAddress = ""
     var amount:Long = 0
@@ -26,7 +26,10 @@ class SendViewModel : ViewModel() {
     var formattedFee: String = NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
     var timeLockInterval: LockTimeInterval? = null
     var errorMsg = ""
-
+    companion object{
+        const val TAG = "SF-SVM"
+        const val sats = 100000000
+    }
     init{
         CoroutineScope(IO).launch {
 
@@ -44,45 +47,46 @@ class SendViewModel : ViewModel() {
     }
       private fun generateFeePriority(feeUrl: String = "https://mempool.space/api/v1/fees/recommended"): FeePriority {
         val response = URL(feeUrl).readText()
-        Log.d("SF-SVM", "URL Response: $response")
+
+          Log.d(TAG, "URL Response: $response")
         val gson = Gson()
         return gson.fromJson(response, FeePriority::class.java)
     }
 
     fun generateFee(bitcoinKit: BitcoinKit,feeRate: FEE_RATE): Boolean {
         fee = try {
-            Log.d("SF-SVM", "amount: $amount")
+            Log.d(TAG, "amount: $amount")
             when (feeRate) {
                 FEE_RATE.MED -> bitcoinKit.fee(amount, feeRate = feePriority.medFee)
                 FEE_RATE.LOW -> bitcoinKit.fee(amount, feeRate = feePriority.lowFee)
                 else -> bitcoinKit.fee(amount, feeRate = feePriority.highFee)
             }
         } catch (e:SendValueErrors.InsufficientUnspentOutputs){
-            Log.d("SF-SVM", "generateFee Error: $e")
+            Log.d(TAG, "generateFee Error: $e")
             errorMsg = "Insufficient Balance"
             0
         }
         catch (e:SendValueErrors.EmptyOutputs){
-            Log.d("SF-SVM", "generateFee Error: $e")
+            Log.d(TAG, "generateFee Error: $e")
             errorMsg = "Insufficient Balance"
             0
         }
         catch (e: SendValueErrors.Dust){
-            Log.d("SF-SVM", "generateFee Error: $e")
+            Log.d(TAG, "generateFee Error: $e")
             errorMsg = "You must send at least 0.00001 tBTC"
             0
         }
         catch (e: SendValueErrors){
-            Log.d("SF-SVM", "generateFee Error: $e")
+            Log.d(TAG, "generateFee Error: $e")
             errorMsg = "Fee Generator Failed"
             0
         }
         if(errorMsg.isNotBlank()){
-            Log.d("SF-SVM","Generation Failed")
+            Log.d(TAG,"Generation Failed")
             return false
         }
         formattedFee = "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
-        Log.d("SF-SVM","Generated fee:$formattedFee")
+        Log.d(TAG,"Generated fee:$formattedFee")
         return true
     }
     fun getFeeRate(feeRate: FEE_RATE):Int{
