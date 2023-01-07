@@ -20,7 +20,7 @@ T_BTC {
             passphrase = "",
             walletId,
             BitcoinKit.NetworkType.TestNet,
-            syncMode = BitcoinCore.SyncMode.Api(),
+            syncMode = BitcoinCore.SyncMode.Full(),
             purpose = HDWallet.Purpose.BIP84
         )
     }

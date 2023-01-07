@@ -16,9 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ReceiveViewModel : ViewModel() {
-//Role: Generate Addresses and QRCodes
-    //var currentAddressString:String = ""
-
+    //Generates Addresses & QRCodes for ReceiveFragment
     private val _currentAddress = MutableLiveData<String>()
     val currentAddress:LiveData<String>
             get() = _currentAddress

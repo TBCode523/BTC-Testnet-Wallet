@@ -73,13 +73,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
             Log.d("btc-activity","Error: ${e.message}")
         }
-
-
-
-
-
     }
-
 
     private fun generateWallet(){
         val sb = StringBuilder()
@@ -92,6 +86,7 @@ class MainActivity : AppCompatActivity() {
         seedDialog(sb.toString())
 
     }
+
     private fun seedDialog(seed:String){
         try {
             val alertDialog = AlertDialog.Builder(this)
@@ -120,8 +115,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         Log.d("btc-activity", "MainActivity onDestroy is called! $isFinishing")
         super.onDestroy()
-        if (KitSyncService.isRunning)
-        KitSyncService.stopSync()
+        if (KitSyncService.isRunning) KitSyncService.stopSync()
         isActive = false
 
     }

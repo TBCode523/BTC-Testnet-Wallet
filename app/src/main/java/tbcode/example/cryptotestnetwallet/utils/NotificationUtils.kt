@@ -56,7 +56,7 @@ object NotificationUtils {
     }
     fun createBalanceNotification(balanceStr:String, context: Context): Notification{
         val activityIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, 0)
+        val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(context, channelID)
             .setContentTitle("BTC Testnet")
             .setContentText("Transaction Confirmed!")

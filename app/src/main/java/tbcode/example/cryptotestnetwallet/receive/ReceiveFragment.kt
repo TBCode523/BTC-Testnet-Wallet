@@ -36,7 +36,9 @@ class ReceiveFragment : Fragment() {
 
 
 
-    private lateinit var viewModel: ReceiveViewModel
+    private val viewModel by lazy {
+        ViewModelProvider(this).get(ReceiveViewModel::class.java)
+    }
     private lateinit var receiveTxt: TextView
     private lateinit var qrCode: ImageView
     private lateinit var generateBtn:Button
@@ -66,12 +68,16 @@ class ReceiveFragment : Fragment() {
         return root
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
             cryptoKit =  KitSyncService.bitcoinKit
-            viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
+            //viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
            if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
+               Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
                receiveClick()
            }
             else{

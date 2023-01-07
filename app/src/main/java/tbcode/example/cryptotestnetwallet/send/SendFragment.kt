@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.text.isDigitsOnly
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -39,6 +40,9 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var feeTxt: TextView
     private lateinit var balanceTxt: TextView
     private lateinit var feeRate: SendViewModel.FEE_RATE
+    companion object{
+        const val TAG = "SF"
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -56,18 +60,22 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         return root
     }
 
-
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         cryptoKit =  KitSyncService.bitcoinKit
-
-        feeRate = SendViewModel.FEE_RATE.HIGH
-        feeTxt.text = SpannableStringBuilder(feeRate.name +" " + viewModel.formattedFee +" tBTC")
-        addrTxt.text =SpannableStringBuilder( viewModel.sendAddress)
-        amountTxt.text = SpannableStringBuilder( viewModel.formatAmount())
+        Log.d(TAG, "onActivityCreated")
+        feeRate = if(viewModel.feeR.value != null){
+            Log.d(TAG, "SVM fee rate: ${viewModel.feeR.value!!}")
+            viewModel.feeR.value!!
+        } else{
+            Log.d(TAG, "SVM fee rate is null")
+            SendViewModel.FEE_RATE.HIGH
+        }
+        Log.d(TAG, "feeRate: $feeRate")
+        feeTxt.text = SpannableStringBuilder(feeRate.name +" "+ viewModel.formatFee())
+        //addrTxt.text =SpannableStringBuilder( viewModel.sendAddress)
+        amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0L))
         balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
-        Log.d("SF", "addrViewmodel: ${viewModel.sendAddress}")
         scanBtn.setOnClickListener{
 
             val scanner = IntentIntegrator(this.activity)
@@ -78,35 +86,68 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
            confirmDialogue()
 
         }
-        maxSw.setOnCheckedChangeListener { _, is_On ->
-               if(is_On)
-                   calculateMax(viewModel.sendAddress)
+        /*maxSw.setOnCheckedChangeListener { _, is_On ->
+               val sendAddr = addrTxt.text.toString()
+               if(is_On){
+                   if(sendAddr.isNotBlank() && sendAddr.isNotEmpty())
+                       calculateMax(sendAddr)
+                   else{
+                       maxSw.isChecked = false
+                       Toast.makeText(this.activity, "Address field is blank", Toast.LENGTH_LONG).show()
+                   }
+               }
+
+        }*/
+
+        maxSw.setOnClickListener {
+            val sendAddr = addrTxt.text.toString()
+            if(maxSw.isChecked){
+                if(sendAddr.isNotBlank() && sendAddr.isNotEmpty()) {
+                    calculateMax(sendAddr)
+
+                }
+                else{
+                    maxSw.isChecked = false
+                    Toast.makeText(this.activity, "Address field is blank", Toast.LENGTH_LONG).show()
+                }
+            }
+
         }
+
         feeTxt.setOnClickListener{
             feePopup(feeTxt)
         }
 
         addrTxt.doOnTextChanged { text, _, _, _ ->
-            viewModel.sendAddress = text.toString()
-            Log.d("SF", "Addr changed to: ${viewModel.sendAddress}")
+            //viewModel.sendAddress = text.toString()
+            Log.d(TAG, "Addr changed to: $text")
+            if (addrTxt.text.isEmpty() || addrTxt.text.isBlank()){
+                maxSw.isChecked = false
+            }
         }
 
         amountTxt.doOnTextChanged { text, _, _, _ ->
-           if( text!!.isNotBlank()){
-               viewModel.amount = (text.toString().toDouble() * SendViewModel.sats).toLong()
+            var newAmount = 0L
+            if(text.toString().toDoubleOrNull() != null){
+               //viewModel.amount = (text.toString().toDouble() * SendViewModel.sats).toLong()
+               newAmount = (text.toString().toDouble() * SendViewModel.sats).toLong()
             }
-
-            Log.d("SF", "Amount changed to: ${viewModel.amount}")
-            if( viewModel.amount > 0 && !viewModel.generateFee(cryptoKit, feeRate)){
+            Log.d(TAG, "Amount changed to: $newAmount")
+            //addrTxt.text.toString()
+            //New bug??? need valid address
+            //maxSw.isChecked = newAmount == cryptoKit.maximumSpendableValue("", viewModel.getFeeRate(feeRate), mutableMapOf())
+            try {
+                maxSw.isChecked = newAmount == cryptoKit.maximumSpendableValue(addrTxt.text.toString(), viewModel.getFeeRate(feeRate), mutableMapOf())
+            }catch (e:Exception){
+                maxSw.isChecked = false
+            }
+            if( newAmount > 0 && !viewModel.generateFee(cryptoKit, feeRate, newAmount)){
                 Toast.makeText(this.context,"Error: ${viewModel.errorMsg}", Toast.LENGTH_SHORT).show()
             }
             feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
         }
 
-
     }
-
-
 
     private fun scanQRCode(){
         val integrator = IntentIntegrator.forSupportFragment(this).apply {
@@ -119,87 +160,81 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         Log.e("Scanner","Scanning")
         integrator.initiateScan()
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null) {
             if (result.contents == null) Toast.makeText(this.activity, "Cancelled", Toast.LENGTH_LONG).show()
             else {
-                val parsedQr = parseQR(result.contents)
-                addrTxt.text = SpannableStringBuilder(parsedQr[0])
-                amountTxt.text = SpannableStringBuilder(parsedQr[1])
+                /*TODO Bugs involving parsePaymentAddress include:
+                    -amount field not working for bech32 addresses
+                    -invalid addresses can still pass the parsing checks
+
+                 */
+                Log.d(TAG, "qrScanner contents: ${result.contents}")
+                val parsedQr = cryptoKit.parsePaymentAddress(result.contents)
+                Log.d(TAG, "parsedQr: $parsedQr")
+                if(parsedQr.address != "null"){
+                    addrTxt.text = SpannableStringBuilder(parsedQr.address)
+                }
+                else{
+                    Toast.makeText(this.context, "Invalid QRCode", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                if(parsedQr.amount == null){
+                    amountTxt.text = SpannableStringBuilder("0.00")
+                }
+                else amountTxt.text = SpannableStringBuilder(parsedQr.amount.toString())
+
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
-    private fun parseQR(contents: String): List<String> {
-        var addy = ""
-        var amm = ""
-        val addyRegex:Regex
-        val ammRegex: Regex
-        val testNetPattern = "(tb1|[nm2])[a-zA-HJ-NP-Z0-9]{25,39}\$"
-        val ammPattern = "[1-9]\\d*(\\.\\d+)?\$"
-        addyRegex = Regex(testNetPattern)
-        ammRegex = Regex(ammPattern)
 
-
-        if(addyRegex.containsMatchIn(contents)){
-           var match = addyRegex.find(contents)
-            addy =  match!!.value
-            if (ammRegex.containsMatchIn(contents)){
-                match = ammRegex.find(contents)
-                amm = match!!.value
-            }
-            Toast.makeText(this.activity, "Scanned: $contents", Toast.LENGTH_LONG).show()
-
-
-        }
-        else{
-            Toast.makeText(this.activity, "Invalid Address: $contents", Toast.LENGTH_LONG).show()
-        }
-
-        return listOf(addy,amm)
-    }
     private fun calculateMax(address:String?){
         try {
-          val max=  cryptoKit.maximumSpendableValue(address, viewModel.getFeeRate(feeRate), viewModel.getPluginData())
-            viewModel.amount = max
-            amountTxt.text = SpannableStringBuilder(viewModel.formatAmount())
+            val max = cryptoKit.maximumSpendableValue(address, viewModel.getFeeRate(feeRate), viewModel.getPluginData())
+            //viewModel.amount = max
+            amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(max))
         } catch (e: Exception) {
             when (e) {
-
                 is SendValueErrors.Dust,
-                is SendValueErrors.EmptyOutputs -> Toast.makeText(this.context, "You must send at least 0.00001 tBTC",Toast.LENGTH_SHORT ).show()
+                is SendValueErrors.EmptyOutputs -> Toast.makeText(this.context, "You must have at least 0.00001 tBTC",Toast.LENGTH_SHORT ).show()
                 is AddressFormatException ->Toast.makeText(this.context, "Could not Format Address",Toast.LENGTH_SHORT).show()
                 else -> e.message ?: Toast.makeText(this.context,"Maximum could not be calculated", Toast.LENGTH_SHORT).show()
             }
+            maxSw.isChecked = false
         }
     }
+
        private fun confirmDialogue(){
          try {
-             val sendAddressStr: String = "To: " + viewModel.sendAddress
-             val amountStr = "Amount: ${viewModel.formatAmount()}"
+             val amount = (amountTxt.text.toString().toDouble() * SendViewModel.sats).toLong()
+             val sendAddress = addrTxt.text.toString()
+             val sendAddressStr: String = "To: $sendAddress"
+             val amountStr = "Amount: ${viewModel.formatAmount(amount)}"
              val feeStr = "Fee: ${viewModel.formatFee()}"
-             val finalStr = "Final Amount: ${viewModel.formatTotal()}"
+             val finalStr = "Final Amount: ${viewModel.formatTotal(amount)}"
              val warningStr = "NOTE: Do not Attempt to send tBTC to regular BTC Wallets!"
              val alertDialog = AlertDialog.Builder(this.requireContext())
                      .setTitle("Confirm Your Request")
                      .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr \n $warningStr")
                      .setPositiveButton("SEND") { _, _ ->
                          try {
-                             Log.d("TX", "Sending: ${viewModel.amount} sats\nTo: ${viewModel.sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
-                             cryptoKit.validateAddress(viewModel.sendAddress, mutableMapOf())
-                           val tx =  cryptoKit.send(viewModel.sendAddress,viewModel.amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
+                             Log.d("TX", "Sending: $amount sats\nTo: ${sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
+                             cryptoKit.validateAddress(sendAddress, mutableMapOf())
+                             val tx =  cryptoKit.send(sendAddress,amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
                              Log.d("SF", "Transaction str: $tx")
                              Log.d( "SF","txInfo: ${tx.header.serializedTxInfo}")
                              Log.d( "SF","meta-hash: ${tx.metadata.transactionHash}")
                              Log.d("SF","header-hash: ${tx.header.hash}")
                              Log.d("SF", "Transaction type: ${tx.metadata.type}")
                              addrTxt.text.clear()
-                             viewModel.amount = 0
-                             amountTxt.text = SpannableStringBuilder(viewModel.formatAmount())
+                             //viewModel.amount = 0
+                             amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0))
                              balanceTxt.text = SpannableStringBuilder("Current Balance: ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
                              maxSw.isChecked = false
                              Toast.makeText(this.requireContext(), "Transaction Sent Check your Dashboard!", Toast.LENGTH_LONG).show()
@@ -207,10 +242,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                              Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
                          } catch (e:Exception){
                              Toast.makeText(this.requireContext(), "Transaction Request Failed: ${e.message}", Toast.LENGTH_LONG).show()
-
                          }
-
-
                      }
                      .setNegativeButton("CANCEL") { _, _ ->
 
@@ -227,6 +259,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         feePopup.inflate(R.menu.fees)
         feePopup.show()
     }
+
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         feeRate = when(item!!.itemId){
             R.id.high_fee ->{
@@ -239,11 +272,13 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                 SendViewModel.FEE_RATE.LOW
             }
         }
+        viewModel._feeR.value = feeRate
         if (maxSw.isChecked){
-            calculateMax(viewModel.sendAddress)
+            calculateMax(addrTxt.text.toString())
         }
         else{
-            if(!viewModel.generateFee(cryptoKit, feeRate)){
+            val amount = (amountTxt.text.toString().toDouble() * SendViewModel.sats).toLong()
+            if(!viewModel.generateFee(cryptoKit, feeRate, amount)){
                 Toast.makeText(this.context,"Error: ${viewModel.errorMsg}", Toast.LENGTH_SHORT).show()
             }
         }
@@ -251,10 +286,5 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
         return true
     }
-
-
-
-
-
 
 }

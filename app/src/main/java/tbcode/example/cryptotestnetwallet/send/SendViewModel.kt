@@ -1,7 +1,10 @@
 package tbcode.example.cryptotestnetwallet.send
 import FeePriority
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import io.horizontalsystems.bitcoincore.core.IPluginData
 import io.horizontalsystems.bitcoincore.managers.SendValueErrors
@@ -10,56 +13,82 @@ import io.horizontalsystems.hodler.HodlerData
 import io.horizontalsystems.hodler.HodlerPlugin
 import io.horizontalsystems.hodler.LockTimeInterval
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import java.net.URL
 
 class SendViewModel : ViewModel() {
 
     enum class FEE_RATE{LOW, MED, HIGH}
+    //private lateinit var feePriority:FeePriority
+    private val _feeP = MutableLiveData<FeePriority>()
+    val feeP:LiveData<FeePriority>
+        get() = _feeP
 
-    private lateinit var feePriority:FeePriority
-    var sendAddress = ""
-    var amount:Long = 0
+    val _feeR = MutableLiveData<FEE_RATE>()
+    val feeR:LiveData<FEE_RATE>
+        get() = _feeR
+
+    //var sendAddress = ""
+    //var amount:Long = 0
     var fee:Long = 0
-    var formattedFee: String = NumberFormatHelper.cryptoAmountFormat.format( fee/ 100_000_000.0)
+    //var formattedFee: String = NumberFormatHelper.cryptoAmountFormat.format(0/ 100_000_000.0)
     var timeLockInterval: LockTimeInterval? = null
     var errorMsg = ""
     companion object{
         const val TAG = "SF-SVM"
         const val sats = 100000000
     }
+
     init{
-        CoroutineScope(IO).launch {
-
-            feePriority = try {
+        /*CoroutineScope(IO).launch {
+           val feePriority = try {
                 generateFeePriority()
-
             } catch (e:Exception){
-                Log.d("SF-SVM", "generateFeePriority Error: $e")
-                FeePriority(10,5,3)
+                Log.d(TAG, "generateFeePriority Error: $e")
+                FeePriority(1,1,1)
+            }
+            _feeP.postValue(feePriority)
+
+            //formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feePriority.medFee/ 100_000_000.0)
+        }*/
+        viewModelScope.launch {
+            withContext(IO){
+                val feePriority = try {
+                    generateFeePriority()
+                } catch (e:Exception){
+                    Log.d(TAG, "generateFeePriority Error: $e")
+                    FeePriority(1,1,1)
+                }
+                Log.d(TAG, "feePriority: $feePriority")
+                _feeP.postValue(feePriority)
+                Log.d(TAG, "feeP: ${_feeP.value}")
             }
 
-            formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feePriority.medFee/ 100_000_000.0)
 
+            //formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feePriority.medFee/ 100_000_000.0)
         }
-    }
-      private fun generateFeePriority(feeUrl: String = "https://mempool.space/api/v1/fees/recommended"): FeePriority {
-        val response = URL(feeUrl).readText()
 
-          Log.d(TAG, "URL Response: $response")
+    }
+
+    private fun generateFeePriority(feeUrl: String = "https://mempool.space/api/v1/fees/recommended"): FeePriority {
+        val response = URL(feeUrl).readText()
+        Log.d(TAG, "URL Response: $response")
         val gson = Gson()
         return gson.fromJson(response, FeePriority::class.java)
     }
 
-    fun generateFee(bitcoinKit: BitcoinKit,feeRate: FEE_RATE): Boolean {
+    fun generateFee(bitcoinKit: BitcoinKit,feeRate: FEE_RATE, amount:Long): Boolean {
+        errorMsg = ""
         fee = try {
             Log.d(TAG, "amount: $amount")
             when (feeRate) {
-                FEE_RATE.MED -> bitcoinKit.fee(amount, feeRate = feePriority.medFee)
-                FEE_RATE.LOW -> bitcoinKit.fee(amount, feeRate = feePriority.lowFee)
-                else -> bitcoinKit.fee(amount, feeRate = feePriority.highFee)
+                FEE_RATE.MED -> bitcoinKit.fee(amount, feeRate = feeP.value!!.medFee)
+                FEE_RATE.LOW -> bitcoinKit.fee(amount, feeRate = feeP.value!!.lowFee)
+                else -> bitcoinKit.fee(amount, feeRate = feeP.value!!.highFee)
             }
         } catch (e:SendValueErrors.InsufficientUnspentOutputs){
             Log.d(TAG, "generateFee Error: $e")
@@ -68,7 +97,7 @@ class SendViewModel : ViewModel() {
         }
         catch (e:SendValueErrors.EmptyOutputs){
             Log.d(TAG, "generateFee Error: $e")
-            errorMsg = "Insufficient Balance"
+            errorMsg = "Insufficient Balance(Empty Outputs)"
             0
         }
         catch (e: SendValueErrors.Dust){
@@ -85,25 +114,28 @@ class SendViewModel : ViewModel() {
             Log.d(TAG,"Generation Failed")
             return false
         }
-        formattedFee = "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
-        Log.d(TAG,"Generated fee:$formattedFee")
+        //formattedFee = "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
+        _feeR.value = feeRate
+        Log.d(TAG,"New feeRate:${_feeR.value}")
+        Log.d(TAG,"Generated fee:${formatFee()}")
         return true
     }
+
     fun getFeeRate(feeRate: FEE_RATE):Int{
         return when(feeRate){
-            FEE_RATE.LOW -> feePriority.lowFee
-            FEE_RATE.HIGH -> feePriority.highFee
-            else -> feePriority.medFee
+            FEE_RATE.LOW -> feeP.value!!.lowFee
+            FEE_RATE.HIGH -> feeP.value!!.highFee
+            else -> feeP.value!!.medFee
         }
     }
 
-    fun formatAmount():String{
+    fun formatAmount(amount: Long):String{
         return NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)
     }
     fun formatFee():String{
         return  "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
     }
-    fun formatTotal():String{
+    fun formatTotal(amount: Long):String{
         return  "${NumberFormatHelper.cryptoAmountFormat.format((fee+amount) / 100_000_000.0)} tBTC"
     }
     fun getPluginData(): MutableMap<Byte, IPluginData> {
@@ -113,8 +145,5 @@ class SendViewModel : ViewModel() {
         }
         return pluginData
     }
-
-
-    
 
 }
