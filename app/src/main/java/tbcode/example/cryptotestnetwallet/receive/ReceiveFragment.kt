@@ -33,9 +33,6 @@ import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 
 class ReceiveFragment : Fragment() {
-
-
-
     private val viewModel by lazy {
         ViewModelProvider(this).get(ReceiveViewModel::class.java)
     }
@@ -54,7 +51,6 @@ class ReceiveFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         val root = inflater.inflate(R.layout.receive_fragment, container, false)
         receiveTxt = root.findViewById(R.id.tv_Receive)
         amountTxt = root.findViewById(R.id.ev_amount_rf)
@@ -63,19 +59,13 @@ class ReceiveFragment : Fragment() {
         faucetBtn = root.findViewById(R.id.faucet_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
         if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
-
-
         return root
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
             cryptoKit =  KitSyncService.bitcoinKit
-            //viewModel = ViewModelProvider(this).get(ReceiveViewModel::class.java)
            if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
                Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
                receiveClick()
@@ -90,7 +80,7 @@ class ReceiveFragment : Fragment() {
                 receiveClick(amount = amountTxt.text.toString())
             }
             faucetBtn.setOnClickListener {
-                val uriStr = "https://testnet-faucet.mempool.co/"
+                val uriStr = "https://testnet-faucet.com/btc-testnet/"
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr))
                 ContextCompat.startActivity(requireContext(), intent, null)
             }
@@ -108,74 +98,29 @@ class ReceiveFragment : Fragment() {
 
     }
     private fun receiveClick(amount: String = "") {
-
         try {
-
             val generatedAddress: String = viewModel.generateAddress(cryptoKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
             if(sharedPref.getBoolean("warning", true)) warningDialogue()
-
-
-           /* CoroutineScope(IO).launch {
-                if (amount.isBlank())
-                generateQRCode("bitcoin:$generatedAddress")
-
-                else
-                    generateQRCode("bitcoin:$generatedAddress?amount=$amount")
-
-            }*/
             if (amount.isBlank()) viewModel.generateQRCode("bitcoin:$generatedAddress")
             else viewModel.generateQRCode("bitcoin:$generatedAddress?amount=$amount")
-
             Log.d(TAG, "generatedAddress: $generatedAddress")
             Log.d(TAG, "currentAddress: ${viewModel.currentAddress.value}")
             Log.d(TAG, "currentQRCode: ${viewModel.currentQRCode.value}")
             receiveTxt.text = viewModel.currentAddress.value
             qrCode.setImageBitmap(viewModel.currentQRCode.value)
-
-
             Toast.makeText(
                 this.context,
                 "QRCode Successfully Generated: ${viewModel.currentAddress.value}",
                 Toast.LENGTH_SHORT
             ).show()
-
         } catch (e: Exception) {
             Toast.makeText(this.context, "Failed to Generate Address: ${e.message}", Toast.LENGTH_SHORT)
                 .show()
         }
     }
 
-
-   /* private suspend fun setQRCode(bitmap: Bitmap){
-
-        withContext(Main){
-
-            qrCode.setImageBitmap(bitmap)
-        }
-    }
-    private suspend fun generateQRCode(text:String){
-            val width = 750
-            val height = 750
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val codeWriter = MultiFormatWriter()
-            try {
-                val bitMatrix = codeWriter.encode(text, BarcodeFormat.QR_CODE, width, height)
-                for (x in 0 until width) {
-                    for (y in 0 until height) {
-                        bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
-                    }
-                }
-            } catch (e: WriterException) {
-                Log.d(TAG, "generateQRCode: ${e.message}")
-
-            }
-
-            setQRCode(bitmap)
-
-        }
-*/
     private fun warningDialogue(){
         val view= View.inflate(this.requireContext(), R.layout.dialog_checkbox, null)
          checkBox = view.findViewById(R.id.dialog_checkBox)

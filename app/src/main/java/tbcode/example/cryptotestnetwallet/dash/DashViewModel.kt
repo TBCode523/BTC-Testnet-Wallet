@@ -15,14 +15,12 @@ class DashViewModel : ViewModel() {
     fun getBalance(bitcoinKit:BitcoinKit){
         balance.value = bitcoinKit.balance
     }
+
     fun getTransactions(bitcoinKit: BitcoinKit){
       bitcoinKit.transactions().subscribe { txList: List<TransactionInfo> ->
           transactions.value = txList
       }.let{
             CompositeDisposable().add(it)
       }
-
     }
-
-
 }

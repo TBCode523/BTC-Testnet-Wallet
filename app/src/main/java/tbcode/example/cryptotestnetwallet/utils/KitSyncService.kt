@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
+import android.os.IBinder
 import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.util.Log
@@ -26,6 +28,8 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
    private  var manager:NotificationManager? = null
     private val syncId = 1
     private var progress = ""
+    private val localBinder =  LocalBinder()
+    //lateinit var bitcoinKit: BitcoinKit
     init {
         Log.d("btc-service", "In innit")
         instance = this
@@ -38,8 +42,8 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         //Every 15 min.
         //private var syncTiming = 900000L
-        var syncState = MutableLiveData<BitcoinCore.KitState>()
-        var lastBlockInfo = MutableLiveData<BlockInfo>()
+        val syncState = MutableLiveData<BitcoinCore.KitState>()
+        val lastBlockInfo = MutableLiveData<BlockInfo>()
         lateinit var bitcoinKit: BitcoinKit
         var cryptoKits = CryptoKits.T_BTC
         lateinit var instance: KitSyncService
@@ -82,16 +86,23 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
             */
         }
     }
-
-
+    inner class LocalBinder: Binder(){
+        fun getBindServiceInstance(): KitSyncService{
+            return this@KitSyncService
+        }
+    }
+    override fun onBind(intent: Intent): IBinder {
+        super.onBind(intent)
+        return localBinder
+    }
     override fun onCreate() {
         super.onCreate()
         Log.d("btc-service", "Service onCreate")
         Log.d("btc-service", "Kit Builder syncMode: ${BTCKitUtils.syncMode}")
         val sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-        val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
+        /*val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
         Log.d("btc-service", "Kit Builder words: $words")
-        bitcoinKit = cryptoKits.createKit(this, words!!) as BitcoinKit
+        bitcoinKit = cryptoKits.createKit(this, words!!) as BitcoinKit*/
         bitcoinKit.listener = this
         syncState.value = bitcoinKit.syncState
         lastBlockInfo.value = bitcoinKit.lastBlockInfo

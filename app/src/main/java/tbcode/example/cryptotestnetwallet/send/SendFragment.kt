@@ -27,9 +27,6 @@ import tbcode.example.cryptotestnetwallet.R
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
-
-
-
     private lateinit var viewModel: SendViewModel
     private lateinit var addrTxt:EditText
     private lateinit var amountTxt:EditText
@@ -47,7 +44,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-       
         val root = inflater.inflate(R.layout.send_fragment, container, false)
         addrTxt = root.findViewById(R.id.ev_address)
         amountTxt = root.findViewById(R.id.ev_amount)
@@ -73,51 +69,31 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         }
         Log.d(TAG, "feeRate: $feeRate")
         feeTxt.text = SpannableStringBuilder(feeRate.name +" "+ viewModel.formatFee())
-        //addrTxt.text =SpannableStringBuilder( viewModel.sendAddress)
         amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0L))
         balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
         scanBtn.setOnClickListener{
-
             val scanner = IntentIntegrator(this.activity)
             scanQRCode()
         }
         sendBtn.setOnClickListener{
-
            confirmDialogue()
-
         }
-        /*maxSw.setOnCheckedChangeListener { _, is_On ->
-               val sendAddr = addrTxt.text.toString()
-               if(is_On){
-                   if(sendAddr.isNotBlank() && sendAddr.isNotEmpty())
-                       calculateMax(sendAddr)
-                   else{
-                       maxSw.isChecked = false
-                       Toast.makeText(this.activity, "Address field is blank", Toast.LENGTH_LONG).show()
-                   }
-               }
-
-        }*/
 
         maxSw.setOnClickListener {
             val sendAddr = addrTxt.text.toString()
             if(maxSw.isChecked){
                 if(sendAddr.isNotBlank() && sendAddr.isNotEmpty()) {
                     calculateMax(sendAddr)
-
                 }
                 else{
                     maxSw.isChecked = false
                     Toast.makeText(this.activity, "Address field is blank", Toast.LENGTH_LONG).show()
                 }
             }
-
         }
-
         feeTxt.setOnClickListener{
             feePopup(feeTxt)
         }
-
         addrTxt.doOnTextChanged { text, _, _, _ ->
             //viewModel.sendAddress = text.toString()
             Log.d(TAG, "Addr changed to: $text")
@@ -125,17 +101,12 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                 maxSw.isChecked = false
             }
         }
-
         amountTxt.doOnTextChanged { text, _, _, _ ->
             var newAmount = 0L
             if(text.toString().toDoubleOrNull() != null){
-               //viewModel.amount = (text.toString().toDouble() * SendViewModel.sats).toLong()
                newAmount = (text.toString().toDouble() * SendViewModel.sats).toLong()
             }
             Log.d(TAG, "Amount changed to: $newAmount")
-            //addrTxt.text.toString()
-            //New bug??? need valid address
-            //maxSw.isChecked = newAmount == cryptoKit.maximumSpendableValue("", viewModel.getFeeRate(feeRate), mutableMapOf())
             try {
                 maxSw.isChecked = newAmount == cryptoKit.maximumSpendableValue(addrTxt.text.toString(), viewModel.getFeeRate(feeRate), mutableMapOf())
             }catch (e:Exception){
@@ -162,7 +133,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null) {
             if (result.contents == null) Toast.makeText(this.activity, "Cancelled", Toast.LENGTH_LONG).show()
@@ -170,7 +140,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                 /*TODO Bugs involving parsePaymentAddress include:
                     -amount field not working for bech32 addresses
                     -invalid addresses can still pass the parsing checks
-
                  */
                 Log.d(TAG, "qrScanner contents: ${result.contents}")
                 val parsedQr = cryptoKit.parsePaymentAddress(result.contents)
@@ -186,18 +155,15 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                     amountTxt.text = SpannableStringBuilder("0.00")
                 }
                 else amountTxt.text = SpannableStringBuilder(parsedQr.amount.toString())
-
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
-
     private fun calculateMax(address:String?){
         try {
             val max = cryptoKit.maximumSpendableValue(address, viewModel.getFeeRate(feeRate), viewModel.getPluginData())
-            //viewModel.amount = max
             amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(max))
         } catch (e: Exception) {
             when (e) {
@@ -282,7 +248,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                 Toast.makeText(this.context,"Error: ${viewModel.errorMsg}", Toast.LENGTH_SHORT).show()
             }
         }
-
         feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
         return true
     }
