@@ -58,7 +58,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        cryptoKit =  KitSyncService.bitcoinKit
+        cryptoKit =  KitSyncService.bitcoinKit!!
         Log.d(TAG, "onActivityCreated")
         feeRate = if(viewModel.feeR.value != null){
             Log.d(TAG, "SVM fee rate: ${viewModel.feeR.value!!}")

@@ -54,7 +54,7 @@ class DashFragment : Fragment(){
         try {
             if(KitSyncService.isRunning) Log.d(TAG, "KitSyncService is Running")
             else  Log.d(TAG, "KitSyncService is not Running")
-            cryptoKit = KitSyncService.bitcoinKit
+            cryptoKit = KitSyncService.bitcoinKit!!
             viewModel.getBalance(cryptoKit)
             viewModel.getTransactions(cryptoKit)
             Log.d(TAG, "Unspendable: ${cryptoKit.balance.unspendable}")

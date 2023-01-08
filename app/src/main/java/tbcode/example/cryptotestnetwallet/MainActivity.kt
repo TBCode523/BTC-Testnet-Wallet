@@ -21,6 +21,7 @@ import io.github.novacrypto.bip39.Words
 import io.github.novacrypto.bip39.wordlists.English
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.awaitAll
+import tbcode.example.cryptotestnetwallet.utils.CryptoKits
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 import tbcode.example.cryptotestnetwallet.utils.kit_utils.BTCKitUtils
 import java.security.SecureRandom
@@ -34,12 +35,14 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "Is the kit initialized? ${KitSyncService.bitcoinKit}" )
             val localBinder = p1 as KitSyncService.LocalBinder
             kitSyncService = localBinder.getBindServiceInstance()
+
         }
 
         override fun onServiceDisconnected(p0: ComponentName?) {
             TODO("Not yet implemented")
         }
     }
+
     companion object {
         var isActive = false
         const val TAG = "btc-activity"
@@ -49,13 +52,13 @@ class MainActivity : AppCompatActivity() {
         //Disable dark mode here
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("btc-activity", "MainActivity onCreate is called!")
         try {
             isActive = true
             sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-
             if(!sharedPref.contains(BTCKitUtils.getWalletID())){
                 Log.d("btc-activity", "No wallet")
                 generateWallet()
@@ -63,19 +66,22 @@ class MainActivity : AppCompatActivity() {
             val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
             Log.d("btc-service", "Kit Builder words: $words")
             KitSyncService.bitcoinKit = KitSyncService.cryptoKits.createKit(this, words!!) as BitcoinKit
+            when(KitSyncService.cryptoKits){
+                CryptoKits.T_BTC -> {
+
+                }
+                else -> {}
+            }
             if(!isOnline()){ Log.d("btc-activity", "Not connected")
                 throw Exception("No Connection Detected!")
             }
             val serviceIntent = Intent(this, KitSyncService::class.java)
             bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
                 Log.d("btc-activity","Starting Foreground Service")
                 startForegroundService(serviceIntent)
-            }*/
+            }
             Log.d("btc-activity","Service Component type: ${serviceIntent.component}")
-            Log.d("btc-activity", "What is service state? : $kitSyncService")
-
-
         }catch (e:Exception) {
             Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
             Log.d("btc-activity","Error: ${e.message}")
@@ -135,9 +141,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         if (KitSyncService.isRunning) KitSyncService.stopSync()
         isActive = false
+    }
 
-    }
-    fun getKitSync(): KitSyncService{
-        return kitSyncService
-    }
 }

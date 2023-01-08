@@ -8,13 +8,9 @@ import io.horizontalsystems.hdwalletkit.HDWallet
 
 enum class CryptoKits {
 T_BTC {
-
-
-
-
+    lateinit var bitcoinKit: BitcoinKit
     override fun createKit(context: Context, words: List<String>): BitcoinKit {
-
-        return BitcoinKit(
+        bitcoinKit = BitcoinKit(
             context,
             words,
             passphrase = "",
@@ -23,8 +19,11 @@ T_BTC {
             syncMode = BitcoinCore.SyncMode.Full(),
             purpose = HDWallet.Purpose.BIP84
         )
+        return bitcoinKit
     }
-
+    init {
+        setLabel()
+    }
     override fun setLabel() {
         this.label = "tBTC"
     }
@@ -34,8 +33,34 @@ T_BTC {
     var label = "tBTC"
     abstract fun createKit(context: Context, words: List<String>):AbstractKit
     abstract fun setLabel()
-    init {
-        setLabel()
-    }
+
+}
+sealed class CryptoKitsE {
+    object T_BTC: CryptoKitsE() {
+        lateinit var bitcoinKit: BitcoinKit
+        override fun createKit(context: Context, words: List<String>): BitcoinKit {
+            bitcoinKit = BitcoinKit(
+                context,
+                words,
+                passphrase = "",
+                walletId,
+                BitcoinKit.NetworkType.TestNet,
+                syncMode = BitcoinCore.SyncMode.Full(),
+                purpose = HDWallet.Purpose.BIP84
+            )
+            return bitcoinKit
+        }
+        init {
+            setLabel()
+        }
+        override fun setLabel() {
+            this.label = "tBTC"
+        }
+
+    };
+    val walletId = "MyWallet"
+    var label = "tBTC"
+    abstract fun createKit(context: Context, words: List<String>):AbstractKit
+    abstract fun setLabel()
 
 }

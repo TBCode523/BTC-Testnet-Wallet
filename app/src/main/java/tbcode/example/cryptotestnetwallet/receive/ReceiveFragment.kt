@@ -65,7 +65,7 @@ class ReceiveFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         try {
-            cryptoKit =  KitSyncService.bitcoinKit
+            cryptoKit =  KitSyncService.bitcoinKit!!
            if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
                Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
                receiveClick()
