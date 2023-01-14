@@ -1,18 +1,15 @@
 package tbcode.example.cryptotestnetwallet.utils
 
-import android.app.AlarmManager
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Binder
 import android.os.IBinder
-import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoincore.models.BalanceInfo
@@ -20,7 +17,6 @@ import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.cryptotestnetwallet.MainActivity
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
-import tbcode.example.cryptotestnetwallet.utils.KitSyncService.Companion.bitcoinKit
 import tbcode.example.cryptotestnetwallet.utils.kit_utils.BTCKitUtils
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,9 +26,9 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
     private  var manager:NotificationManager? = null
     private val syncId = 1
     private var progress = ""
-    private val localBinder =  LocalBinder()
+    private lateinit var sharedPref: SharedPreferences
     init {
-        Log.d("btc-service", "In innit")
+        Log.d("CT-service", "In innit")
         instance = this
         isRunning = true
 
@@ -45,10 +41,13 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         val syncState = MutableLiveData<BitcoinCore.KitState>()
         val lastBlockInfo = MutableLiveData<BlockInfo>()
         var bitcoinKit: BitcoinKit? = null
-        var cryptoKits = CryptoKits.T_BTC
+        var coinKitEnum = CoinKitEnum.T_BTC
         lateinit var instance: KitSyncService
         var isRunning = false
-
+        private val _isKitAvailable = MutableLiveData<Boolean>().apply {
+            value = false
+        }
+        val isKitAvailable:LiveData<Boolean> = _isKitAvailable
         fun stopSync(){
             Log.d("btc-db", "Stopping Foreground Service!")
             instance.stopForeground(true)
@@ -81,24 +80,15 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
             */
         }
     }
-    inner class LocalBinder: Binder(){
-        fun getBindServiceInstance(): KitSyncService{
-            return this@KitSyncService
-        }
-    }
-
-    override fun onBind(intent: Intent): IBinder {
-        super.onBind(intent)
-        return localBinder
-    }
 
     override fun onCreate() {
         super.onCreate()
         Log.d("btc-service", "Service onCreate")
         Log.d("btc-service", "Kit Builder syncMode: ${BTCKitUtils.syncMode}")
-        /*val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
+        sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
+        val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
         Log.d("btc-service", "Kit Builder words: $words")
-        bitcoinKit = cryptoKits.createKit(this, words!!) as BitcoinKit*/
+        bitcoinKit = coinKitEnum.createKit(this, words!!) as BitcoinKit
         bitcoinKit!!.listener = this
         syncState.value = bitcoinKit!!.syncState
         lastBlockInfo.value = bitcoinKit!!.lastBlockInfo
@@ -111,6 +101,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         val syncNotification = NotificationUtils.createBaseNotification("Starting to Sync!", this)
         startForeground(syncId, syncNotification)
         syncKit()
+        _isKitAvailable.value = true
         return START_STICKY
     }
 

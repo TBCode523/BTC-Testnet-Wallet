@@ -21,9 +21,8 @@ import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import java.net.URL
 
 class SendViewModel : ViewModel() {
-
     enum class FEE_RATE{LOW, MED, HIGH}
-    //private lateinit var feePriority:FeePriority
+
     private val _feeP = MutableLiveData<FeePriority>()
     val feeP:LiveData<FeePriority>
         get() = _feeP
@@ -32,29 +31,15 @@ class SendViewModel : ViewModel() {
     val feeR:LiveData<FEE_RATE>
         get() = _feeR
 
-    //var sendAddress = ""
-    //var amount:Long = 0
     var fee:Long = 0
-    //var formattedFee: String = NumberFormatHelper.cryptoAmountFormat.format(0/ 100_000_000.0)
     var timeLockInterval: LockTimeInterval? = null
     var errorMsg = ""
     companion object{
-        const val TAG = "SF-SVM"
+        const val TAG = "CT-SF-SVM"
         const val sats = 100000000
     }
 
     init{
-        /*CoroutineScope(IO).launch {
-           val feePriority = try {
-                generateFeePriority()
-            } catch (e:Exception){
-                Log.d(TAG, "generateFeePriority Error: $e")
-                FeePriority(1,1,1)
-            }
-            _feeP.postValue(feePriority)
-
-            //formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feePriority.medFee/ 100_000_000.0)
-        }*/
         viewModelScope.launch {
             withContext(IO){
                 val feePriority = try {
@@ -67,11 +52,7 @@ class SendViewModel : ViewModel() {
                 _feeP.postValue(feePriority)
                 Log.d(TAG, "feeP: ${_feeP.value}")
             }
-
-
-            //formattedFee = NumberFormatHelper.cryptoAmountFormat.format( feePriority.medFee/ 100_000_000.0)
         }
-
     }
 
     private fun generateFeePriority(feeUrl: String = "https://mempool.space/api/v1/fees/recommended"): FeePriority {
@@ -114,7 +95,6 @@ class SendViewModel : ViewModel() {
             Log.d(TAG,"Generation Failed")
             return false
         }
-        //formattedFee = "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
         _feeR.value = feeRate
         Log.d(TAG,"New feeRate:${_feeR.value}")
         Log.d(TAG,"Generated fee:${formatFee()}")

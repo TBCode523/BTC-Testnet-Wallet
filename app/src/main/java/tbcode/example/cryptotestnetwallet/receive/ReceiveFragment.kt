@@ -33,9 +33,7 @@ import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 
 class ReceiveFragment : Fragment() {
-    private val viewModel by lazy {
-        ViewModelProvider(this).get(ReceiveViewModel::class.java)
-    }
+    private lateinit var viewModel: ReceiveViewModel
     private lateinit var receiveTxt: TextView
     private lateinit var qrCode: ImageView
     private lateinit var generateBtn:Button
@@ -45,13 +43,14 @@ class ReceiveFragment : Fragment() {
     private  lateinit var  checkBox: CheckBox
     private lateinit var amountTxt:EditText
     companion object{
-        const val TAG = "RF"
+        const val TAG = "CT-RF"
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val root = inflater.inflate(R.layout.receive_fragment, container, false)
+        viewModel = ViewModelProvider(this)[ReceiveViewModel::class.java]
         receiveTxt = root.findViewById(R.id.tv_Receive)
         amountTxt = root.findViewById(R.id.ev_amount_rf)
         qrCode= root.findViewById(R.id.qr_code)
@@ -59,22 +58,30 @@ class ReceiveFragment : Fragment() {
         faucetBtn = root.findViewById(R.id.faucet_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
         if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
+        KitSyncService.isKitAvailable.observe(viewLifecycleOwner){
+            if (it){
+                Log.d(TAG, "kit is available: ${KitSyncService.bitcoinKit}")
+                setUpUI()
+            }
+            else{
+                Toast.makeText(context, "Your wallet is not ready yet", Toast.LENGTH_SHORT).show()
+            }
+        }
         return root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    private fun setUpUI(){
         try {
             cryptoKit =  KitSyncService.bitcoinKit!!
-           if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
-               Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
-               receiveClick()
-           }
+            if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
+                Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
+                receiveClick()
+            }
             else{
                 receiveTxt.text = viewModel.currentAddress.value
                 qrCode.setImageBitmap(viewModel.currentQRCode.value)
 
-           }
+            }
             generateBtn.setOnClickListener {
                 Log.d(TAG,"QR-Amount: " + amountTxt.text)
                 receiveClick(amount = amountTxt.text.toString())
@@ -93,10 +100,10 @@ class ReceiveFragment : Fragment() {
             }
 
         } catch (e:Exception){
-            Toast.makeText(context,"Wallet is Null",Toast.LENGTH_LONG).show()
+            Toast.makeText(context,e.message,Toast.LENGTH_LONG).show()
         }
-
     }
+
     private fun receiveClick(amount: String = "") {
         try {
             val generatedAddress: String = viewModel.generateAddress(cryptoKit)

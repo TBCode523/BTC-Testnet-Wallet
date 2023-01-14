@@ -24,6 +24,7 @@ import io.horizontalsystems.bitcoincore.models.TransactionDataSortType
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import tbcode.example.cryptotestnetwallet.R
+import tbcode.example.cryptotestnetwallet.receive.ReceiveFragment
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
@@ -38,7 +39,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var balanceTxt: TextView
     private lateinit var feeRate: SendViewModel.FEE_RATE
     companion object{
-        const val TAG = "SF"
+        const val TAG = "CT-SF"
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,12 +53,19 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         scanBtn = root.findViewById(R.id.btn_scan)
         sendBtn = root.findViewById(R.id.btn_send)
         maxSw = root.findViewById(R.id.btn_max)
-        viewModel = ViewModelProvider(this).get(SendViewModel::class.java)
+        viewModel = ViewModelProvider(this)[SendViewModel::class.java]
+        KitSyncService.isKitAvailable.observe(viewLifecycleOwner){
+            if (it){
+                Log.d(ReceiveFragment.TAG, "kit is available: ${KitSyncService.bitcoinKit}")
+                setUpUI()
+            }
+            else{
+                Toast.makeText(context, "Your wallet is not ready yet", Toast.LENGTH_SHORT).show()
+            }
+        }
         return root
     }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    private fun setUpUI(){
         cryptoKit =  KitSyncService.bitcoinKit!!
         Log.d(TAG, "onActivityCreated")
         feeRate = if(viewModel.feeR.value != null){
@@ -76,7 +84,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
             scanQRCode()
         }
         sendBtn.setOnClickListener{
-           confirmDialogue()
+            confirmDialogue()
         }
 
         maxSw.setOnClickListener {
@@ -104,7 +112,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         amountTxt.doOnTextChanged { text, _, _, _ ->
             var newAmount = 0L
             if(text.toString().toDoubleOrNull() != null){
-               newAmount = (text.toString().toDouble() * SendViewModel.sats).toLong()
+                newAmount = (text.toString().toDouble() * SendViewModel.sats).toLong()
             }
             Log.d(TAG, "Amount changed to: $newAmount")
             try {
@@ -117,7 +125,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
             }
             feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
         }
-
     }
 
     private fun scanQRCode(){
@@ -176,48 +183,48 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         }
     }
 
-       private fun confirmDialogue(){
-         try {
-             val amount = (amountTxt.text.toString().toDouble() * SendViewModel.sats).toLong()
-             val sendAddress = addrTxt.text.toString()
-             val sendAddressStr: String = "To: $sendAddress"
-             val amountStr = "Amount: ${viewModel.formatAmount(amount)}"
-             val feeStr = "Fee: ${viewModel.formatFee()}"
-             val finalStr = "Final Amount: ${viewModel.formatTotal(amount)}"
-             val warningStr = "NOTE: Do not Attempt to send tBTC to regular BTC Wallets!"
-             val alertDialog = AlertDialog.Builder(this.requireContext())
-                     .setTitle("Confirm Your Request")
-                     .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr \n $warningStr")
-                     .setPositiveButton("SEND") { _, _ ->
-                         try {
-                             Log.d("TX", "Sending: $amount sats\nTo: ${sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
-                             cryptoKit.validateAddress(sendAddress, mutableMapOf())
-                             val tx =  cryptoKit.send(sendAddress,amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
-                             Log.d("SF", "Transaction str: $tx")
-                             Log.d( "SF","txInfo: ${tx.header.serializedTxInfo}")
-                             Log.d( "SF","meta-hash: ${tx.metadata.transactionHash}")
-                             Log.d("SF","header-hash: ${tx.header.hash}")
-                             Log.d("SF", "Transaction type: ${tx.metadata.type}")
-                             addrTxt.text.clear()
-                             //viewModel.amount = 0
-                             amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0))
-                             balanceTxt.text = SpannableStringBuilder("Current Balance: ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
-                             maxSw.isChecked = false
-                             Toast.makeText(this.requireContext(), "Transaction Sent Check your Dashboard!", Toast.LENGTH_LONG).show()
-                         } catch (e:SendValueErrors.Dust){
-                             Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
-                         } catch (e:Exception){
-                             Toast.makeText(this.requireContext(), "Transaction Request Failed: ${e.message}", Toast.LENGTH_LONG).show()
-                         }
-                     }
-                     .setNegativeButton("CANCEL") { _, _ ->
+    private fun confirmDialogue(){
+        try {
+            val amount = (amountTxt.text.toString().toDouble() * SendViewModel.sats).toLong()
+            val sendAddress = addrTxt.text.toString()
+            val sendAddressStr: String = "To: $sendAddress"
+            val amountStr = "Amount: ${viewModel.formatAmount(amount)}"
+            val feeStr = "Fee: ${viewModel.formatFee()}"
+            val finalStr = "Final Amount: ${viewModel.formatTotal(amount)}"
+            val warningStr = "NOTE: Do not Attempt to send tBTC to regular BTC Wallets!"
+            val alertDialog = AlertDialog.Builder(this.requireContext())
+                .setTitle("Confirm Your Request")
+                .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr \n $warningStr")
+                .setPositiveButton("SEND") { _, _ ->
+                    try {
+                        Log.d("TX", "Sending: $amount sats\nTo: ${sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
+                        cryptoKit.validateAddress(sendAddress, mutableMapOf())
+                        val tx =  cryptoKit.send(sendAddress,amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
+                        Log.d("SF", "Transaction str: $tx")
+                        Log.d( "SF","txInfo: ${tx.header.serializedTxInfo}")
+                        Log.d( "SF","meta-hash: ${tx.metadata.transactionHash}")
+                        Log.d("SF","header-hash: ${tx.header.hash}")
+                        Log.d("SF", "Transaction type: ${tx.metadata.type}")
+                        addrTxt.text.clear()
+                        //viewModel.amount = 0
+                        amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0))
+                        balanceTxt.text = SpannableStringBuilder("Current Balance: ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
+                        maxSw.isChecked = false
+                        Toast.makeText(this.requireContext(), "Transaction Sent Check your Dashboard!", Toast.LENGTH_LONG).show()
+                    } catch (e:SendValueErrors.Dust){
+                        Toast.makeText(this.requireContext(), "You need at least: ${e.message}", Toast.LENGTH_LONG).show()
+                    } catch (e:Exception){
+                        Toast.makeText(this.requireContext(), "Transaction Request Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+                .setNegativeButton("CANCEL") { _, _ ->
 
-                     }.create()
-             alertDialog.show()
-         }catch (e:Exception){
-             Toast.makeText(context, "${e.message}", Toast.LENGTH_SHORT).show()
-         }
-     }
+                }.create()
+            alertDialog.show()
+        }catch (e:Exception){
+            Toast.makeText(context, "${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun feePopup(v:View){
         val feePopup = PopupMenu(context,v)
