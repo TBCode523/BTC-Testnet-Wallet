@@ -4,8 +4,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Binder
-import android.os.IBinder
 import android.text.SpannableStringBuilder
 import android.util.Log
 import androidx.lifecycle.LifecycleService
@@ -15,13 +13,14 @@ import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoincore.models.BalanceInfo
 import io.horizontalsystems.bitcoincore.models.BlockInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
+import io.horizontalsystems.litecoinkit.LitecoinKit
 import tbcode.example.cryptotestnetwallet.MainActivity
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import tbcode.example.cryptotestnetwallet.utils.kit_utils.BTCKitUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
-class KitSyncService: LifecycleService(), BitcoinKit.Listener {
+class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Listener {
     //Role: This is where the syncing and notifications will be handled
     private  var manager:NotificationManager? = null
     private val syncId = 1
@@ -43,6 +42,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         var bitcoinKit: BitcoinKit? = null
         var coinKitEnum = CoinKitEnum.T_BTC
         lateinit var instance: KitSyncService
+        var coinKit: CoinKit? = null
         var isRunning = false
         private val _isKitAvailable = MutableLiveData<Boolean>().apply {
             value = false
@@ -50,10 +50,10 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         val isKitAvailable:LiveData<Boolean> = _isKitAvailable
         fun stopSync(){
             Log.d("btc-db", "Stopping Foreground Service!")
-            instance.stopForeground(true)
+            instance.stopForeground(STOP_FOREGROUND_REMOVE)
             isRunning = false
             bitcoinKit!!.stop()
-
+            coinKit?.kit?.stop()
            /* val alarmIntent = Intent(instance, KitBroadcastReceiver::class.java).let {
                     i -> PendingIntent.getBroadcast(instance, 0, i, PendingIntent.FLAG_IMMUTABLE)
             }
@@ -90,9 +90,27 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
         Log.d("btc-service", "Kit Builder words: $words")
         bitcoinKit = coinKitEnum.createKit(this, words!!) as BitcoinKit
         bitcoinKit!!.listener = this
+
         syncState.value = bitcoinKit!!.syncState
         lastBlockInfo.value = bitcoinKit!!.lastBlockInfo
-        
+        if(coinKit == null) coinKit = CoinKit.tLTC(this, words)
+        coinKit.let {
+            when (it) {
+                is CoinKit.tBTC -> {
+                    (it.kit as BitcoinKit).listener = this
+                    syncState.value = it.kit.syncState
+                    lastBlockInfo.value = it.kit.lastBlockInfo
+                }
+                is CoinKit.tLTC ->{
+                    (it.kit as LitecoinKit).listener = this
+                    syncState.value = it.kit.syncState
+                    lastBlockInfo.value = it.kit.lastBlockInfo
+                }
+                else -> {}
+            }
+
+        }
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -180,7 +198,9 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
                 }
             }
         Log.d("btc-service", "Just b4 sync")
-        bitcoinKit!!.start()
+        //bitcoinKit!!.start()
+        coinKit!!.kit.start()
+
     } catch (e:Exception){
         Log.d("btc-service", "Service Exception: ${e.message}")
     }
@@ -195,8 +215,14 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener {
     }
 
     override fun onBalanceUpdate(balance: BalanceInfo) {
-        super.onBalanceUpdate(balance)
-        val newBalanceStr = "New Balance: ${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} tBTC"
+        coinKit.let {
+            when(it){
+                is CoinKit.tBTC -> super<BitcoinKit.Listener>.onBalanceUpdate(balance)
+                else -> {super<LitecoinKit.Listener>.onBalanceUpdate(balance)}
+            }
+        }
+
+        val newBalanceStr = "New Balance: ${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} ${coinKit?.label}"
         manager?.notify(2,NotificationUtils.createBalanceNotification(newBalanceStr, this))
     }
 

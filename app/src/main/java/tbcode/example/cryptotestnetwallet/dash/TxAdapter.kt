@@ -19,7 +19,7 @@ import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import tbcode.example.cryptotestnetwallet.R
 import java.text.DateFormat
 import java.util.*
-
+//TODO Adapt this to different transaction classes
 class TxAdapter(var transactions: List<TransactionInfo>?, private val blockInfo: BlockInfo?, private val label: String) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
 {
     inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {

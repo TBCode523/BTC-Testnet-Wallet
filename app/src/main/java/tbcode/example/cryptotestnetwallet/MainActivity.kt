@@ -3,9 +3,7 @@ package tbcode.example.cryptotestnetwallet
 import android.content.*
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
-import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -19,9 +17,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import io.github.novacrypto.bip39.MnemonicGenerator
 import io.github.novacrypto.bip39.Words
 import io.github.novacrypto.bip39.wordlists.English
-import io.horizontalsystems.bitcoinkit.BitcoinKit
-import tbcode.example.cryptotestnetwallet.utils.CoinKitEnum
-import tbcode.example.cryptotestnetwallet.utils.CoinKits
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 import tbcode.example.cryptotestnetwallet.utils.kit_utils.BTCKitUtils
 import java.security.SecureRandom
@@ -52,9 +47,6 @@ class MainActivity : AppCompatActivity() {
             }
             val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
             Log.d("btc-service", "Kit Builder words: $words")
-            when(KitSyncService.coinKitEnum){
-                else -> {}
-            }
             if(!isOnline()){ Log.d("btc-activity", "Not connected")
                 throw Exception("No Connection Detected!")
             }

@@ -1,28 +1,16 @@
 package tbcode.example.cryptotestnetwallet.utils
 
-import android.app.Application
 import android.content.Context
 import io.horizontalsystems.bitcoincore.AbstractKit
 import io.horizontalsystems.bitcoincore.BitcoinCore
-import io.horizontalsystems.bitcoincore.models.BalanceInfo
-import io.horizontalsystems.bitcoincore.models.TransactionInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
-import io.horizontalsystems.dashkit.DashKit
-import io.horizontalsystems.ethereumkit.core.EthereumKit
-import io.horizontalsystems.ethereumkit.core.signer.Signer
-import io.horizontalsystems.ethereumkit.crypto.digest.Keccak256
-import io.horizontalsystems.ethereumkit.models.Address
-import io.horizontalsystems.ethereumkit.models.Chain
-import io.horizontalsystems.ethereumkit.models.RpcSource
-import io.horizontalsystems.ethereumkit.models.TransactionSource
 import io.horizontalsystems.hdwalletkit.HDWallet
-import io.horizontalsystems.hdwalletkit.Mnemonic
-import io.reactivex.Single
+import io.horizontalsystems.litecoinkit.LitecoinKit
 
 
-
-sealed class CoinKits(val label: String){
-    class tBTC(context:Context, words: List<String>, var kit:BitcoinKit? = null) : CoinKits("tBTC"){
+sealed class CoinKit(val label: String){
+    lateinit var kit: AbstractKit
+    class tBTC(context:Context, words: List<String>) : CoinKit("tBTC"){
 
         init {
            createKit(context, words)
@@ -36,13 +24,29 @@ sealed class CoinKits(val label: String){
                 BitcoinKit.NetworkType.TestNet,
                 syncMode = BitcoinCore.SyncMode.Full(),
                 purpose = HDWallet.Purpose.BIP84
-            ).apply {
-                start()
-            }
+            )
         }
 
     }
-    class tETH(context:Context, words: List<String>, var kit:EthereumKit?) : CoinKits("tETH"){
+    class tLTC(context:Context, words: List<String>) : CoinKit("tLTC"){
+
+        init {
+            createKit(context, words)
+        }
+        override fun createKit(context: Context, words: List<String>){
+            kit = LitecoinKit(
+                context,
+                words,
+                passphrase = "",
+                walletId,
+                LitecoinKit.NetworkType.TestNet,
+                syncMode = BitcoinCore.SyncMode.Full(),
+                purpose = HDWallet.Purpose.BIP84
+            )
+        }
+
+    }
+    /*class tETH(context:Context, words: List<String>, var kit:EthereumKit?) : CoinKit("tETH"){
         private lateinit var signer:Signer
         init {
             createKit(context, words)
@@ -64,7 +68,7 @@ sealed class CoinKits(val label: String){
             signer = Signer.getInstance(seed, Chain.Ethereum)
         }
 
-    }
+    }*/
 
     val walletId = "MyWallet"
     abstract fun createKit(context: Context, words: List<String>)

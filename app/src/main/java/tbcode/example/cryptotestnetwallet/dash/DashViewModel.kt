@@ -7,6 +7,7 @@ import io.horizontalsystems.bitcoincore.models.TransactionInfo
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import io.reactivex.disposables.CompositeDisposable
 import tbcode.example.cryptotestnetwallet.utils.CoinKitEnum
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
 
 class DashViewModel : ViewModel() {
     //Role: Retrieve balance and transactions
@@ -19,7 +20,9 @@ class DashViewModel : ViewModel() {
     fun getBalance(kitEnum: CoinKitEnum){
         balance.value = kitEnum.getBalance()
     }
-
+    fun getBalance(coinKit: CoinKit){
+        balance.value = coinKit.kit.balance
+    }
     fun getTransactions(bitcoinKit: BitcoinKit){
       bitcoinKit.transactions().subscribe { txList: List<TransactionInfo> ->
           transactions.value = txList
@@ -29,6 +32,13 @@ class DashViewModel : ViewModel() {
     }
     fun getTransactions(kitEnum: CoinKitEnum){
         kitEnum.getTransactions().subscribe { txList: List<TransactionInfo> ->
+            transactions.value = txList
+        }.let{
+            CompositeDisposable().add(it)
+        }
+    }
+    fun getTransactions(coinKit: CoinKit){
+        coinKit.kit.transactions().subscribe { txList: List<TransactionInfo> ->
             transactions.value = txList
         }.let{
             CompositeDisposable().add(it)
