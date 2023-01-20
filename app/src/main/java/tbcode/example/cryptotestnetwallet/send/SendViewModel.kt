@@ -18,6 +18,8 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
+import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 import java.net.URL
 
 class SendViewModel : ViewModel() {
@@ -100,7 +102,44 @@ class SendViewModel : ViewModel() {
         Log.d(TAG,"Generated fee:${formatFee()}")
         return true
     }
-
+    fun generateFee(coinKit: CoinKit,feeRate: FEE_RATE, amount:Long): Boolean {
+        errorMsg = ""
+        fee = try {
+            Log.d(TAG, "amount: $amount")
+            when (feeRate) {
+                FEE_RATE.MED -> coinKit.kit.fee(amount, feeRate = feeP.value!!.medFee)
+                FEE_RATE.LOW -> coinKit.kit.fee(amount, feeRate = feeP.value!!.lowFee)
+                else -> coinKit.kit.fee(amount, feeRate = feeP.value!!.highFee)
+            }
+        } catch (e:SendValueErrors.InsufficientUnspentOutputs){
+            Log.d(TAG, "generateFee Error: $e")
+            errorMsg = "Insufficient Balance"
+            0
+        }
+        catch (e:SendValueErrors.EmptyOutputs){
+            Log.d(TAG, "generateFee Error: $e")
+            errorMsg = "Insufficient Balance(Empty Outputs)"
+            0
+        }
+        catch (e: SendValueErrors.Dust){
+            Log.d(TAG, "generateFee Error: $e")
+            errorMsg = "You must send at least 0.00001 tBTC"
+            0
+        }
+        catch (e: SendValueErrors){
+            Log.d(TAG, "generateFee Error: $e")
+            errorMsg = "Fee Generator Failed"
+            0
+        }
+        if(errorMsg.isNotBlank()){
+            Log.d(TAG,"Generation Failed")
+            return false
+        }
+        _feeR.value = feeRate
+        Log.d(TAG,"New feeRate:${_feeR.value}")
+        Log.d(TAG,"Generated fee:${formatFee()}")
+        return true
+    }
     fun getFeeRate(feeRate: FEE_RATE):Int{
         return when(feeRate){
             FEE_RATE.LOW -> feeP.value!!.lowFee
@@ -113,10 +152,10 @@ class SendViewModel : ViewModel() {
         return NumberFormatHelper.cryptoAmountFormat.format(amount / 100_000_000.0)
     }
     fun formatFee():String{
-        return  "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} tBTC"
+        return  "${NumberFormatHelper.cryptoAmountFormat.format(fee / 100_000_000.0)} ${KitSyncService.coinKit?.label}"
     }
     fun formatTotal(amount: Long):String{
-        return  "${NumberFormatHelper.cryptoAmountFormat.format((fee+amount) / 100_000_000.0)} tBTC"
+        return  "${NumberFormatHelper.cryptoAmountFormat.format((fee+amount) / 100_000_000.0)} ${KitSyncService.coinKit?.label}"
     }
     fun getPluginData(): MutableMap<Byte, IPluginData> {
         val pluginData = mutableMapOf<Byte, IPluginData>()

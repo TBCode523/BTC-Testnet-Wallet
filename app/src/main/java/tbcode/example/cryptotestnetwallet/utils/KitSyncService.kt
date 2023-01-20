@@ -50,10 +50,12 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
         val isKitAvailable:LiveData<Boolean> = _isKitAvailable
         fun stopSync(){
             Log.d("btc-db", "Stopping Foreground Service!")
+            _isKitAvailable.value = false
             instance.stopForeground(STOP_FOREGROUND_REMOVE)
             isRunning = false
             bitcoinKit!!.stop()
             coinKit?.kit?.stop()
+            coinKit = null
            /* val alarmIntent = Intent(instance, KitBroadcastReceiver::class.java).let {
                     i -> PendingIntent.getBroadcast(instance, 0, i, PendingIntent.FLAG_IMMUTABLE)
             }
@@ -179,9 +181,8 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
                             "api syncing ${state.transactions} txs"
                         }
                         is BitcoinCore.KitState.NotSynced -> {
-                            Log.d("btc-service", "Wrecked")
+                            Log.d("btc-service", "Wrecked: ${state.exception.message} ")
                             if (MainActivity.isActive) {
-
                                 progress = "Unable to sync!"
                                 manager?.notify(
                                     syncId,

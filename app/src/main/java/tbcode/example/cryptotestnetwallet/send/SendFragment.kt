@@ -25,6 +25,7 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import tbcode.example.cryptotestnetwallet.R
 import tbcode.example.cryptotestnetwallet.receive.ReceiveFragment
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
@@ -35,6 +36,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var sendBtn:Button
     private lateinit var maxSw:SwitchCompat
     private lateinit var cryptoKit: BitcoinKit
+    private lateinit var coinKit: CoinKit
     private lateinit var feeTxt: TextView
     private lateinit var balanceTxt: TextView
     private lateinit var feeRate: SendViewModel.FEE_RATE
@@ -57,6 +59,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         KitSyncService.isKitAvailable.observe(viewLifecycleOwner){
             if (it){
                 Log.d(ReceiveFragment.TAG, "kit is available: ${KitSyncService.bitcoinKit}")
+                coinKit = KitSyncService.coinKit!!
                 setUpUI()
             }
             else{
@@ -66,7 +69,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         return root
     }
     private fun setUpUI(){
-        cryptoKit =  KitSyncService.bitcoinKit!!
+        //cryptoKit =  KitSyncService.bitcoinKit!!
         Log.d(TAG, "onActivityCreated")
         feeRate = if(viewModel.feeR.value != null){
             Log.d(TAG, "SVM fee rate: ${viewModel.feeR.value!!}")
@@ -78,7 +81,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         Log.d(TAG, "feeRate: $feeRate")
         feeTxt.text = SpannableStringBuilder(feeRate.name +" "+ viewModel.formatFee())
         amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0L))
-        balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
+        balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(coinKit.kit.balance.spendable / 100_000_000.0)} ${coinKit.label}" )
         scanBtn.setOnClickListener{
             val scanner = IntentIntegrator(this.activity)
             scanQRCode()
@@ -116,11 +119,11 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
             }
             Log.d(TAG, "Amount changed to: $newAmount")
             try {
-                maxSw.isChecked = newAmount == cryptoKit.maximumSpendableValue(addrTxt.text.toString(), viewModel.getFeeRate(feeRate), mutableMapOf())
+                maxSw.isChecked = newAmount == coinKit.kit.maximumSpendableValue(addrTxt.text.toString(), viewModel.getFeeRate(feeRate), mutableMapOf())
             }catch (e:Exception){
                 maxSw.isChecked = false
             }
-            if( newAmount > 0 && !viewModel.generateFee(cryptoKit, feeRate, newAmount)){
+            if( newAmount > 0 && !viewModel.generateFee(coinKit, feeRate, newAmount)){
                 Toast.makeText(this.context,"Error: ${viewModel.errorMsg}", Toast.LENGTH_SHORT).show()
             }
             feeTxt.text = SpannableStringBuilder("${feeRate.name} ${viewModel.formatFee()}")
@@ -149,7 +152,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                     -invalid addresses can still pass the parsing checks
                  */
                 Log.d(TAG, "qrScanner contents: ${result.contents}")
-                val parsedQr = cryptoKit.parsePaymentAddress(result.contents)
+                val parsedQr = coinKit.kit.parsePaymentAddress(result.contents)
                 Log.d(TAG, "parsedQr: $parsedQr")
                 if(parsedQr.address != "null"){
                     addrTxt.text = SpannableStringBuilder(parsedQr.address)
@@ -170,7 +173,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
 
     private fun calculateMax(address:String?){
         try {
-            val max = cryptoKit.maximumSpendableValue(address, viewModel.getFeeRate(feeRate), viewModel.getPluginData())
+            val max = coinKit.kit.maximumSpendableValue(address, viewModel.getFeeRate(feeRate), viewModel.getPluginData())
             amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(max))
         } catch (e: Exception) {
             when (e) {
@@ -187,7 +190,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         try {
             val amount = (amountTxt.text.toString().toDouble() * SendViewModel.sats).toLong()
             val sendAddress = addrTxt.text.toString()
-            val sendAddressStr: String = "To: $sendAddress"
+            val sendAddressStr = "To: $sendAddress"
             val amountStr = "Amount: ${viewModel.formatAmount(amount)}"
             val feeStr = "Fee: ${viewModel.formatFee()}"
             val finalStr = "Final Amount: ${viewModel.formatTotal(amount)}"
@@ -198,8 +201,8 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                 .setPositiveButton("SEND") { _, _ ->
                     try {
                         Log.d("TX", "Sending: $amount sats\nTo: ${sendAddress}\nFee: ${viewModel.getFeeRate(feeRate)}(${feeRate.name})")
-                        cryptoKit.validateAddress(sendAddress, mutableMapOf())
-                        val tx =  cryptoKit.send(sendAddress,amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
+                        coinKit.kit.validateAddress(sendAddress, mutableMapOf())
+                        val tx =  coinKit.kit.send(sendAddress,amount,feeRate=viewModel.getFeeRate(feeRate),sortType = TransactionDataSortType.Shuffle,pluginData = mutableMapOf<Byte, IPluginData>())
                         Log.d("SF", "Transaction str: $tx")
                         Log.d( "SF","txInfo: ${tx.header.serializedTxInfo}")
                         Log.d( "SF","meta-hash: ${tx.metadata.transactionHash}")
@@ -208,7 +211,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
                         addrTxt.text.clear()
                         //viewModel.amount = 0
                         amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0))
-                        balanceTxt.text = SpannableStringBuilder("Current Balance: ${NumberFormatHelper.cryptoAmountFormat.format(cryptoKit.balance.spendable / 100_000_000.0)} tBTC" )
+                        balanceTxt.text = SpannableStringBuilder("Current Balance: ${NumberFormatHelper.cryptoAmountFormat.format(coinKit.kit.balance.spendable / 100_000_000.0)} tBTC" )
                         maxSw.isChecked = false
                         Toast.makeText(this.requireContext(), "Transaction Sent Check your Dashboard!", Toast.LENGTH_LONG).show()
                     } catch (e:SendValueErrors.Dust){
@@ -251,7 +254,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         }
         else{
             val amount = (amountTxt.text.toString().toDouble() * SendViewModel.sats).toLong()
-            if(!viewModel.generateFee(cryptoKit, feeRate, amount)){
+            if(!viewModel.generateFee(coinKit, feeRate, amount)){
                 Toast.makeText(this.context,"Error: ${viewModel.errorMsg}", Toast.LENGTH_SHORT).show()
             }
         }

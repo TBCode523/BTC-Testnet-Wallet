@@ -14,13 +14,15 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
 
 class ReceiveViewModel : ViewModel() {
     //Generates Addresses & QRCodes for ReceiveFragment
-    private val _currentAddress = MutableLiveData<String>()
+    private val _currentAddress = MutableLiveData<String>().apply {
+        value = ""
+    }
     val currentAddress:LiveData<String>
             get() = _currentAddress
-
 
     private val _currentQRCode = MutableLiveData<Bitmap>()
     val currentQRCode:LiveData<Bitmap>
@@ -28,6 +30,10 @@ class ReceiveViewModel : ViewModel() {
 
     fun generateAddress(bitcoinKit: BitcoinKit):String{
         _currentAddress.value = bitcoinKit.receiveAddress()
+        return _currentAddress.value!!
+    }
+    fun generateAddress(coinKit: CoinKit):String{
+        _currentAddress.value = coinKit.kit.receiveAddress()
         return _currentAddress.value!!
     }
     fun generateQRCode(text:String){

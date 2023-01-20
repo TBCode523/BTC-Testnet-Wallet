@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tbcode.example.cryptotestnetwallet.R
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 
 
@@ -72,41 +73,42 @@ class ReceiveFragment : Fragment() {
 
     private fun setUpUI(){
         try {
-            cryptoKit =  KitSyncService.bitcoinKit!!
-            if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
-                Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
-                receiveClick()
-            }
-            else{
-                receiveTxt.text = viewModel.currentAddress.value
-                qrCode.setImageBitmap(viewModel.currentQRCode.value)
-
-            }
-            generateBtn.setOnClickListener {
-                Log.d(TAG,"QR-Amount: " + amountTxt.text)
-                receiveClick(amount = amountTxt.text.toString())
-            }
-            faucetBtn.setOnClickListener {
-                val uriStr = "https://testnet-faucet.com/btc-testnet/"
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr))
-                ContextCompat.startActivity(requireContext(), intent, null)
-            }
-            amountTxt.setOnEditorActionListener { _, i, _ ->
-                if (i == EditorInfo.IME_ACTION_DONE) {
-                    receiveClick(amount = amountTxt.text.toString())
-                    true
+            //cryptoKit =  KitSyncService.bitcoinKit!!
+            KitSyncService.coinKit?.let {
+                if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
+                    Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
+                    receiveClick(it)
                 }
-                else false
+                else{
+                    receiveTxt.text = viewModel.currentAddress.value
+                    qrCode.setImageBitmap(viewModel.currentQRCode.value)
+                }
+                generateBtn.setOnClickListener {_ ->
+                    Log.d(TAG,"QR-Amount: " + amountTxt.text)
+                    receiveClick(it,amount = amountTxt.text.toString())
+                }
+                faucetBtn.setOnClickListener {
+                    val uriStr = "https://testnet-faucet.com/btc-testnet/"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr))
+                    ContextCompat.startActivity(requireContext(), intent, null)
+                }
+                amountTxt.setOnEditorActionListener { _, i, _ ->
+                    if (i == EditorInfo.IME_ACTION_DONE) {
+                        receiveClick(it, amount = amountTxt.text.toString())
+                        true
+                    }
+                    else false
+                }
             }
-
         } catch (e:Exception){
             Toast.makeText(context,e.message,Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun receiveClick(amount: String = "") {
+    private fun receiveClick(coinKit: CoinKit,amount: String = "") {
         try {
-            val generatedAddress: String = viewModel.generateAddress(cryptoKit)
+            //viewModel.generateAddress(cryptoKit)
+            val generatedAddress: String = viewModel.generateAddress(coinKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
             if(sharedPref.getBoolean("warning", true)) warningDialogue()
