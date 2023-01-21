@@ -39,9 +39,9 @@ class ReceiveFragment : Fragment() {
     private lateinit var qrCode: ImageView
     private lateinit var generateBtn:Button
     private lateinit var faucetBtn:Button
-    private lateinit var cryptoKit: BitcoinKit
     private lateinit var sharedPref: SharedPreferences
-    private  lateinit var  checkBox: CheckBox
+    private lateinit var checkBox: CheckBox
+    private lateinit var coinKit: CoinKit
     private lateinit var amountTxt:EditText
     companion object{
         const val TAG = "CT-RF"
@@ -58,14 +58,18 @@ class ReceiveFragment : Fragment() {
         generateBtn = root.findViewById(R.id.generate_btn)
         faucetBtn = root.findViewById(R.id.faucet_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-        if(!sharedPref.contains("warning"))  sharedPref.edit().putBoolean("warning", true).apply()
+        if(!sharedPref.contains("warning")) sharedPref.edit().putBoolean("warning", true).apply()
+        if(sharedPref.getBoolean("warning", true)) warningDialogue()
         KitSyncService.isKitAvailable.observe(viewLifecycleOwner){
             if (it){
-                Log.d(TAG, "kit is available: ${KitSyncService.bitcoinKit}")
+                Log.d(TAG, "kit is available: ${KitSyncService.coinKit}")
+                coinKit =KitSyncService.coinKit!!
                 setUpUI()
             }
             else{
                 Toast.makeText(context, "Your wallet is not ready yet", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "kit not available")
+                viewModel.clearFields()
             }
         }
         return root
@@ -73,8 +77,7 @@ class ReceiveFragment : Fragment() {
 
     private fun setUpUI(){
         try {
-            //cryptoKit =  KitSyncService.bitcoinKit!!
-            KitSyncService.coinKit?.let {
+            coinKit.let {
                 if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
                     Log.d(TAG, "vm's addr:${viewModel.currentAddress.value}")
                     receiveClick(it)
@@ -111,7 +114,6 @@ class ReceiveFragment : Fragment() {
             val generatedAddress: String = viewModel.generateAddress(coinKit)
             qrCode.setImageBitmap(null)
             Toast.makeText(this.context, "Generating QRCode", Toast.LENGTH_SHORT).show()
-            if(sharedPref.getBoolean("warning", true)) warningDialogue()
             if (amount.isBlank()) viewModel.generateQRCode("bitcoin:$generatedAddress")
             else viewModel.generateQRCode("bitcoin:$generatedAddress?amount=$amount")
             Log.d(TAG, "generatedAddress: $generatedAddress")
@@ -137,7 +139,8 @@ class ReceiveFragment : Fragment() {
             .setTitle("\t\t\t\t\t\t\t\t\t\t\tWARNING")
             .setView(view)
             .setMessage("\nThis is a Testnet Wallet! \n\n" +
-                    "Do Not Send Mainnet Bitcoin (BTC) to This Address!\n\nWe Are Not Responsible For Lost Funds!")
+                    "Do Not Send Main-net coins (${coinKit.label.drop(1)}) to This Address!\n\n"
+                    + "WE ARE NOT RESPONSIBLE FOR LOST FUNDS!!!!")
             .setPositiveButton("OK"){_ , _ ->
                 if(checkBox.isChecked) sharedPref.edit().putBoolean("warning", false).apply()
             }

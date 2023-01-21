@@ -63,10 +63,15 @@ class ReceiveViewModel : ViewModel() {
 
     }
     //Returns a random string for testing
+    fun clearFields() {
+        _currentAddress.value = null
+    }
     private fun generateRandomString(length: Int):String{
         val charset = ('a'..'z') + ('A'..'Z') + ('0'..'1')
 
         return (1..length).map { charset.random()}.joinToString("")
     }
+
+
 
 }
