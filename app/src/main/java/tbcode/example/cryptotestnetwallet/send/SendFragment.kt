@@ -35,7 +35,6 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
     private lateinit var scanBtn:Button
     private lateinit var sendBtn:Button
     private lateinit var maxSw:SwitchCompat
-    private lateinit var cryptoKit: BitcoinKit
     private lateinit var coinKit: CoinKit
     private lateinit var feeTxt: TextView
     private lateinit var balanceTxt: TextView
@@ -58,18 +57,17 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         viewModel = ViewModelProvider(this)[SendViewModel::class.java]
         KitSyncService.isKitAvailable.observe(viewLifecycleOwner){
             if (it){
-                Log.d(ReceiveFragment.TAG, "kit is available: ${KitSyncService.bitcoinKit}")
+                Log.d(ReceiveFragment.TAG, "kit is available: ${KitSyncService.coinKit}")
                 coinKit = KitSyncService.coinKit!!
                 setUpUI()
             }
             else{
-                Toast.makeText(context, "Your wallet is not ready yet", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Loading Wallet...", Toast.LENGTH_SHORT).show()
             }
         }
         return root
     }
     private fun setUpUI(){
-        //cryptoKit =  KitSyncService.bitcoinKit!!
         Log.d(TAG, "onActivityCreated")
         feeRate = if(viewModel.feeR.value != null){
             Log.d(TAG, "SVM fee rate: ${viewModel.feeR.value!!}")
@@ -81,7 +79,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
         Log.d(TAG, "feeRate: $feeRate")
         feeTxt.text = SpannableStringBuilder(feeRate.name +" "+ viewModel.formatFee())
         amountTxt.text = SpannableStringBuilder(viewModel.formatAmount(0L))
-        balanceTxt.text = SpannableStringBuilder(" ${balanceTxt.text} ${NumberFormatHelper.cryptoAmountFormat.format(coinKit.kit.balance.spendable / 100_000_000.0)} ${coinKit.label}" )
+        balanceTxt.text = SpannableStringBuilder(" ${getString(R.string.current_balance)} ${NumberFormatHelper.cryptoAmountFormat.format(coinKit.kit.balance.spendable / 100_000_000.0)} ${coinKit.label}" )
         scanBtn.setOnClickListener{
             val scanner = IntentIntegrator(this.activity)
             scanQRCode()
@@ -194,7 +192,7 @@ class SendFragment : Fragment(), PopupMenu.OnMenuItemClickListener{
             val amountStr = "Amount: ${viewModel.formatAmount(amount)}"
             val feeStr = "Fee: ${viewModel.formatFee()}"
             val finalStr = "Final Amount: ${viewModel.formatTotal(amount)}"
-            val warningStr = "NOTE: Do not Attempt to send tBTC to regular BTC Wallets!"
+            val warningStr = "NOTE: Do not Attempt to send ${coinKit.label} to regular ${coinKit.label.drop(1)} Wallets!"
             val alertDialog = AlertDialog.Builder(this.requireContext())
                 .setTitle("Confirm Your Request")
                 .setMessage("Check your Transaction Details: \n $sendAddressStr \n $amountStr \n $feeStr \n $finalStr \n $warningStr")
