@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.horizontalsystems.bitcoincore.BitcoinCore
 import io.horizontalsystems.bitcoinkit.BitcoinKit
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import tbcode.example.cryptotestnetwallet.R
@@ -23,7 +24,6 @@ class DashFragment : Fragment(){
     private lateinit var recyclerView: RecyclerView
     private lateinit var txtBalance: TextView
     private lateinit var txtNoTransaction:TextView
-    private lateinit var cryptoKit: BitcoinKit
     private lateinit var adapter: TxAdapter
     companion object{
         const val TAG = "CT-DF"
@@ -67,8 +67,7 @@ class DashFragment : Fragment(){
     private fun setUpUI(){
         if(KitSyncService.isRunning) Log.d(TAG, "KitSyncService is Running")
         else  Log.d(TAG, "KitSyncService is not Running")
-        //cryptoKit = KitSyncService.bitcoinKit!!
-        //viewModel.getBalance(cryptoKit)
+
         KitSyncService.coinKit?.let {
             viewModel.getBalance(it)
             viewModel.getTransactions(it)
