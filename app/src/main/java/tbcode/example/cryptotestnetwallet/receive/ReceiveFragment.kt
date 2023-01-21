@@ -59,7 +59,6 @@ class ReceiveFragment : Fragment() {
         faucetBtn = root.findViewById(R.id.faucet_btn)
         sharedPref = this.requireContext().getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
         if(!sharedPref.contains("warning")) sharedPref.edit().putBoolean("warning", true).apply()
-        if(sharedPref.getBoolean("warning", true)) warningDialogue()
         KitSyncService.isKitAvailable.observe(viewLifecycleOwner){
             if (it){
                 Log.d(TAG, "kit is available: ${KitSyncService.coinKit}")
@@ -76,6 +75,7 @@ class ReceiveFragment : Fragment() {
     }
 
     private fun setUpUI(){
+        if(sharedPref.getBoolean("warning", true)) warningDialogue()
         try {
             coinKit.let {
                 if (viewModel.currentAddress.value.isNullOrEmpty() || viewModel.currentAddress.value!!.isBlank()) {
