@@ -10,6 +10,11 @@ import io.horizontalsystems.litecoinkit.LitecoinKit
 
 sealed class CoinKit(val label: String){
     lateinit var kit: AbstractKit
+
+    companion object{
+     const val walletId = "MyWallet"
+    }
+
     class tBTC(context:Context, words: List<String>) : CoinKit("tBTC"){
 
         init {
@@ -70,7 +75,7 @@ sealed class CoinKit(val label: String){
 
     }*/
 
-    val walletId = "MyWallet"
+
     abstract fun createKit(context: Context, words: List<String>)
 
 }
