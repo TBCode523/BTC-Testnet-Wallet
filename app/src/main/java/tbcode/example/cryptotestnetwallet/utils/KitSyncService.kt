@@ -16,11 +16,10 @@ import io.horizontalsystems.bitcoinkit.BitcoinKit
 import io.horizontalsystems.litecoinkit.LitecoinKit
 import tbcode.example.cryptotestnetwallet.MainActivity
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
-import tbcode.example.cryptotestnetwallet.utils.kit_utils.BTCKitUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
-class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Listener {
+class KitSyncService(): LifecycleService(), BitcoinKit.Listener, LitecoinKit.Listener {
     //Role: This is where the syncing and notifications will be handled
     private  var manager:NotificationManager? = null
     private val syncId = 1
@@ -28,7 +27,6 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
     private lateinit var sharedPref: SharedPreferences
     init {
         Log.d("CT-service", "In innit")
-        instance = this
         isRunning = true
 
     }
@@ -39,9 +37,6 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
         //private val syncTiming = 900000L
         val syncState = MutableLiveData<BitcoinCore.KitState>()
         val lastBlockInfo = MutableLiveData<BlockInfo>()
-        var bitcoinKit: BitcoinKit? = null
-        var coinKitEnum = CoinKitEnum.T_BTC
-        lateinit var instance: KitSyncService
         var coinKit: CoinKit? = null
         var isRunning = false
         private val _isKitAvailable = MutableLiveData<Boolean>().apply {
@@ -51,9 +46,8 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
         fun stopSync(){
             Log.d("btc-db", "Stopping Foreground Service!")
             _isKitAvailable.value = false
-            instance.stopForeground(STOP_FOREGROUND_REMOVE)
+           // instance?.stopForeground(STOP_FOREGROUND_REMOVE)
             isRunning = false
-            bitcoinKit!!.stop()
             coinKit?.kit?.stop()
             coinKit = null
            /* val alarmIntent = Intent(instance, KitBroadcastReceiver::class.java).let {
@@ -86,16 +80,28 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
     override fun onCreate() {
         super.onCreate()
         Log.d("btc-service", "Service onCreate")
-        Log.d("btc-service", "Kit Builder syncMode: ${BTCKitUtils.syncMode}")
-        sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-        val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
-        Log.d("btc-service", "Kit Builder words: $words")
-        bitcoinKit = coinKitEnum.createKit(this, words!!) as BitcoinKit
-        bitcoinKit!!.listener = this
+        //if(coinKit == null) coinKit = CoinKit.tBTC(this, words!!)
 
-        syncState.value = bitcoinKit!!.syncState
-        lastBlockInfo.value = bitcoinKit!!.lastBlockInfo
-        if(coinKit == null) coinKit = CoinKit.tLTC(this, words)
+
+
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
+        val words = sharedPref.getString(CoinKit.walletId,null)?.split(" ")
+        Log.d("btc-service", "Kit Builder words: $words")
+        val coin = intent?.getIntExtra("coin", 0)
+        when(coin){
+            0 -> {
+                Log.d("btc-service", "Picked BTCKit: $words")
+                coinKit = CoinKit.tBTC(this, words!!)
+            }
+            1 ->{
+                Log.d("btc-service", "Picked LTCkit: $words")
+                coinKit = CoinKit.tLTC(this, words!!)
+            }
+        }
         coinKit.let {
             when (it) {
                 is CoinKit.tBTC -> {
@@ -112,11 +118,6 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
             }
 
         }
-
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
         manager = NotificationUtils.createNotificationChannel(this)
         val syncNotification = NotificationUtils.createBaseNotification("Starting to Sync!", this)
         startForeground(syncId, syncNotification)
@@ -131,7 +132,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
         try {
             syncState.observe(this) { state ->
                 run {
-                    Log.d("btc-service", "SyncMode: ${BTCKitUtils.syncMode}")
+                    Log.d("btc-service", "SyncMode: ${coinKit?.kit?.syncState}")
                     when (state) {
                         is BitcoinCore.KitState.Synced -> {
                             Log.d("btc-service", "Synced")
@@ -140,10 +141,10 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
                                 syncId,
                                 NotificationUtils.createBaseNotification("Synced!", this)
                             )
-                            stopForeground(true)
+                            stopForeground(STOP_FOREGROUND_REMOVE)
                             //This will stop the receiver if it was triggered by the alarm
-                            val receiverIntent = Intent(this, KitBroadcastReceiver::class.java)
-                            this.sendBroadcast(receiverIntent)
+                            //val receiverIntent = Intent(this, KitBroadcastReceiver::class.java)
+                            //this.sendBroadcast(receiverIntent)
                         }
                         is BitcoinCore.KitState.Syncing -> {
                             val progressStr =
@@ -151,7 +152,6 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
                             var blockStr = ""
                             lastBlockInfo.observe(this) {
                                 it?.let {
-
                                         blockInfo ->
                                     blockStr = SpannableStringBuilder(
                                         "Block-Height: ${blockInfo.height}\nBlock-Date: ${
@@ -172,7 +172,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
                             Log.d("btc-service", "${syncState.hasActiveObservers()}")
                             manager?.notify(
                                 syncId,
-                                NotificationUtils.createSyncNotification(progressStr, blockStr, this)
+                                NotificationUtils.createSyncNotification(coinKit!!.label,progressStr, blockStr, this)
                             )
                         }
                         is BitcoinCore.KitState.ApiSyncing -> {
@@ -186,7 +186,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
                                 progress = "Unable to sync!"
                                 manager?.notify(
                                     syncId,
-                                    NotificationUtils.createSyncNotification(
+                                    NotificationUtils.createSyncNotification(coinKit!!.label,
                                         progress,
                                         "(Check your Internet connection)",
                                         this
@@ -199,7 +199,7 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
                 }
             }
         Log.d("btc-service", "Just b4 sync")
-        //bitcoinKit!!.start()
+
         coinKit!!.kit.start()
 
     } catch (e:Exception){
@@ -224,7 +224,14 @@ class KitSyncService: LifecycleService(), BitcoinKit.Listener, LitecoinKit.Liste
         }
 
         val newBalanceStr = "New Balance: ${NumberFormatHelper.cryptoAmountFormat.format(balance.spendable / 100_000_000.0)} ${coinKit?.label}"
-        manager?.notify(2,NotificationUtils.createBalanceNotification(newBalanceStr, this))
+        manager?.notify(2,NotificationUtils.createBalanceNotification(coinKit!!.label, newBalanceStr, this))
     }
+    override fun onDestroy() {
+        Log.d("btc-service", "KitSync being destroyed")
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSync()
+        super.onDestroy()
 
+
+    }
 }

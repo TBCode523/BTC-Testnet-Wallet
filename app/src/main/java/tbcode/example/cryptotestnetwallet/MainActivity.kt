@@ -5,26 +5,31 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationView
 import io.github.novacrypto.bip39.MnemonicGenerator
 import io.github.novacrypto.bip39.Words
 import io.github.novacrypto.bip39.wordlists.English
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
-import tbcode.example.cryptotestnetwallet.utils.kit_utils.BTCKitUtils
 import java.security.SecureRandom
 
 class MainActivity : AppCompatActivity() {
     private lateinit var sharedPref: SharedPreferences
-    private lateinit var kitSyncService: KitSyncService
-
+    private lateinit var toggle: ActionBarDrawerToggle
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var drawerNav: NavigationView
     companion object {
         var isActive = false
         const val TAG = "btc-activity"
@@ -37,35 +42,55 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("btc-activity", "MainActivity onCreate is called!")
-        try {
-            isActive = true
-            sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
-            if(!sharedPref.contains(BTCKitUtils.getWalletID())){
-                Log.d("btc-activity", "No wallet")
-                generateWallet()
-            }
-            val words = sharedPref.getString(BTCKitUtils.getWalletID(),null)?.split(" ")
-            Log.d("btc-service", "Kit Builder words: $words")
-            if(!isOnline()){ Log.d("btc-activity", "Not connected")
-                throw Exception("No Connection Detected!")
-            }
-            val serviceIntent = Intent(this, KitSyncService::class.java)
-
-            Log.d("btc-activity","Starting Foreground Service")
-            startForegroundService(serviceIntent)
-            Log.d("btc-activity","Service Component type: ${serviceIntent.component}")
-        }catch (e:Exception) {
-            Toast.makeText(this,"Error: ${e.message}", Toast.LENGTH_LONG).show()
-            Log.d("btc-activity","Error: ${e.message}")
+        Log.d(TAG, "MainActivity onCreate is called!")
+        isActive = true
+        sharedPref = this.getSharedPreferences("btc-kit", Context.MODE_PRIVATE)
+        if(!sharedPref.contains(CoinKit.walletId)){
+            Log.d(TAG, "No wallet")
+            generateWallet()
         }
+        val words = sharedPref.getString(CoinKit.walletId,null)?.split(" ")
+        Log.d(TAG, "Kit Builder words: $words")
+        var serviceIntent = Intent(this, KitSyncService::class.java)
+        Log.d(TAG,"Starting Foreground Service")
+        startForegroundService(serviceIntent)
+        Log.d(TAG,"Service Component type: ${serviceIntent.component}")
         setContentView(R.layout.activity_main)
+        drawerLayout = findViewById(R.id.drawer)
+        drawerNav = findViewById(R.id.drawer_nav)
+        toggle = ActionBarDrawerToggle(this,drawerLayout,R.string.open,R.string.close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        drawerNav.setNavigationItemSelectedListener {
+            val kitClicked = resources.getResourceName(it.itemId).takeLast(4)
+            Log.d(TAG, "kitclicked: $kitClicked coinkitlabel:${KitSyncService.coinKit?.label}")
+            if(kitClicked != KitSyncService.coinKit?.label) {
+                when (it.itemId) {
+                    R.id.tBTC -> {
+                        Toast.makeText(this, "Clicked on tBTC", Toast.LENGTH_SHORT).show()
+                        stopService(serviceIntent)
+                        serviceIntent = Intent(this, KitSyncService::class.java)
+                        serviceIntent.putExtra("coin", 0)
+                        startForegroundService(serviceIntent)
+                    }
+                    R.id.tLTC ->{
+                        Toast.makeText(this, "Clicked on tLTC", Toast.LENGTH_SHORT).show()
+                        stopService(serviceIntent)
+                        serviceIntent = Intent(this, KitSyncService::class.java)
+                        serviceIntent.putExtra("coin", 1)
+                        startForegroundService(serviceIntent)
+                    }
+                }
+            }
+            else Toast.makeText(this, "Already on Kit ${it.title}", Toast.LENGTH_SHORT).show()
+            true
+        }
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
-        val appBarConfiguration = AppBarConfiguration(setOf(R.id.nav_receive, R.id.nav_dash, R.id.nav_send))
+        val appBarConfiguration = AppBarConfiguration(setOf(R.id.nav_receive, R.id.nav_dash, R.id.nav_send), drawerLayout)
         setupActionBarWithNavController(navController,appBarConfiguration)
         navView.setupWithNavController(navController)
-
     }
 
     private fun generateWallet(){
@@ -74,7 +99,7 @@ class MainActivity : AppCompatActivity() {
         SecureRandom().nextBytes(entropy)
         MnemonicGenerator(English.INSTANCE)
                 .createMnemonic(entropy, sb::append)
-        sharedPref.edit().putString(BTCKitUtils.getWalletID(), sb.toString()).apply()
+        sharedPref.edit().putString(CoinKit.walletId, sb.toString()).apply()
         Toast.makeText(this.baseContext, "Generating Wallet", Toast.LENGTH_SHORT).show()
         seedDialog(sb.toString())
 
@@ -98,20 +123,19 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun isOnline(): Boolean {
-        val connMgr = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo: NetworkInfo? = connMgr.activeNetworkInfo
-        return networkInfo?.isConnected == true
-
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item)) return true
+        return super.onOptionsItemSelected(item)
     }
 
-    override fun onStop() {
-        super.onStop()
-    }
+
     override fun onDestroy() {
         Log.d("btc-activity", "MainActivity onDestroy is called! $isFinishing")
         super.onDestroy()
-        if (KitSyncService.isRunning) KitSyncService.stopSync()
+        if (KitSyncService.isRunning){
+            val sIntent = Intent(this, KitSyncService::class.java)
+            stopService(sIntent)
+        }
         isActive = false
     }
 

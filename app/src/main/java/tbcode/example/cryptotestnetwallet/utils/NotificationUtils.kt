@@ -16,24 +16,20 @@ object NotificationUtils {
     private const val channelName = "Testnet Notification"
 
      fun createNotificationChannel(context: Context): NotificationManager? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(
-               channelID,
-                channelName,
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            val manager = context.getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(notificationChannel)
-            manager
-        } else {
-            null
-        }
-    }
-     fun createSyncNotification(progressStr:String, blockStr:String, context: Context): Notification {
+         val notificationChannel = NotificationChannel(
+             channelID,
+             channelName,
+             NotificationManager.IMPORTANCE_HIGH
+         )
+         val manager = context.getSystemService(NotificationManager::class.java)
+         manager.createNotificationChannel(notificationChannel)
+         return manager
+     }
+     fun createSyncNotification(label:String, progressStr:String, blockStr:String, context: Context): Notification {
         val activityIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(context, channelID)
-            .setContentTitle("BTC Testnet")
+            .setContentTitle("${label.drop(1)} Testnet")
             .setContentText(progressStr)
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentIntent(pendingIntent)
@@ -46,7 +42,7 @@ object NotificationUtils {
         val activityIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(context, channelID)
-            .setContentTitle("BTC Testnet")
+            .setContentTitle("Crypto Testnet")
             .setContentText(notiStr)
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentIntent(pendingIntent)
@@ -54,12 +50,12 @@ object NotificationUtils {
             .setNotificationSilent()
             .build()
     }
-    fun createBalanceNotification(balanceStr:String, context: Context): Notification{
+    fun createBalanceNotification(label: String, balanceStr:String, context: Context): Notification{
         val activityIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(context, channelID)
-            .setContentTitle("BTC Testnet")
-            .setContentText("Transaction Confirmed!")
+            .setContentTitle("Crypto Testnet")
+            .setContentText("$label Transaction Confirmed!")
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentIntent(pendingIntent)
             .setStyle(NotificationCompat.BigTextStyle().bigText(balanceStr))
