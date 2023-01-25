@@ -10,7 +10,7 @@ import io.horizontalsystems.litecoinkit.LitecoinKit
 
 sealed class CoinKit(val label: String){
     lateinit var kit: AbstractKit
-
+    lateinit var blockExplorerURl:String
     companion object{
      const val walletId = "MyWallet"
     }
@@ -19,6 +19,7 @@ sealed class CoinKit(val label: String){
 
         init {
            createKit(context, words)
+           blockExplorerURl = "https://sochain.com/tx/BTCTEST/"
         }
         override fun createKit(context: Context, words: List<String>){
            kit = BitcoinKit(
@@ -37,6 +38,7 @@ sealed class CoinKit(val label: String){
 
         init {
             createKit(context, words)
+            blockExplorerURl = "https://sochain.com/tx/LTCTEST/"
         }
         override fun createKit(context: Context, words: List<String>){
             kit = LitecoinKit(
