@@ -14,16 +14,13 @@ class KitBroadcastReceiver: BroadcastReceiver() {
         val serviceIntent = Intent(context, KitSyncService::class.java)
         if (context != null && !KitSyncService.isRunning && isOnline(context)) {
             Log.d("btc-alert", "Starting Foreground Service from Receiver")
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else context.startService(serviceIntent)
+            context.startForegroundService(serviceIntent)
         }
         else{
 
             if(!MainActivity.isActive){
                 Log.d("btc-alert", "App is not active. Stopping Foreground Service from Receiver")
-                KitSyncService.stopSync()
+                context?.stopService(serviceIntent)
             }
         }
 
