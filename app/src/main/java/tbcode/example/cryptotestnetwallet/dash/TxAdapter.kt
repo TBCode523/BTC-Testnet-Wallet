@@ -17,10 +17,12 @@ import io.horizontalsystems.bitcoincore.models.TransactionInfo
 import io.horizontalsystems.bitcoincore.models.TransactionStatus
 import tbcode.example.cryptotestnetwallet.NumberFormatHelper
 import tbcode.example.cryptotestnetwallet.R
+import tbcode.example.cryptotestnetwallet.utils.CoinKit
+import tbcode.example.cryptotestnetwallet.utils.KitSyncService
 import java.text.DateFormat
 import java.util.*
 //TODO Adapt this to different transaction classes
-class TxAdapter(var transactions: List<TransactionInfo>?, private val blockInfo: BlockInfo?, private val label: String) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
+class TxAdapter(private val coinKit: CoinKit, var transactions: List<TransactionInfo>?, private val blockInfo: BlockInfo?, private val label: String) : RecyclerView.Adapter<TxAdapter.ViewHolder>()
 {
     inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val date: TextView = itemView.findViewById(R.id.tv_date)
@@ -34,7 +36,7 @@ class TxAdapter(var transactions: List<TransactionInfo>?, private val blockInfo:
                 Log.d("DF", "Transaction indx: $adapterPosition\n Hash: $txID " +
                         "time:${transactions?.get(adapterPosition)?.transactionHash} " +
                         "Height:${transactions?.get(adapterPosition)?.blockHeight}  ")
-                 val uriStr = "https://mempool.space/testnet/tx/"
+                 val uriStr = coinKit.blockExplorerURl
                  val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr+txID))
                 Toast.makeText(
                     itemView.context,

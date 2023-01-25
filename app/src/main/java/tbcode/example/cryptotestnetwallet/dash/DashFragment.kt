@@ -71,7 +71,7 @@ class DashFragment : Fragment(){
         KitSyncService.coinKit?.let {
             viewModel.getBalance(it)
             viewModel.getTransactions(it)
-            adapter = TxAdapter(viewModel.transactions.value, it.kit.lastBlockInfo, it.label)
+            adapter = TxAdapter(it,viewModel.transactions.value, it.kit.lastBlockInfo, it.label)
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
             Log.d(TAG, "Unspendable: ${it.kit.balance.unspendable}")
