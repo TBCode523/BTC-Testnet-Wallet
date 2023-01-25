@@ -1,14 +1,10 @@
 package tbcode.example.cryptotestnetwallet.receive
 import android.app.AlertDialog
-import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.Bitmap
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.text.SpannableStringBuilder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,15 +14,6 @@ import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.MultiFormatWriter
-import com.google.zxing.WriterException
-import io.horizontalsystems.bitcoinkit.BitcoinKit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import tbcode.example.cryptotestnetwallet.R
 import tbcode.example.cryptotestnetwallet.utils.CoinKit
 import tbcode.example.cryptotestnetwallet.utils.KitSyncService
@@ -91,8 +78,8 @@ class ReceiveFragment : Fragment() {
                     receiveClick(it,amount = amountTxt.text.toString())
                 }
                 faucetBtn.setOnClickListener {
-                    val uriStr = "https://testnet-faucet.com/btc-testnet/"
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriStr))
+                    val faucetURL = "https://testnet-faucet.com/"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(faucetURL))
                     ContextCompat.startActivity(requireContext(), intent, null)
                 }
                 amountTxt.setOnEditorActionListener { _, i, _ ->
