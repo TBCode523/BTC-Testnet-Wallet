@@ -1,8 +1,6 @@
 package tbcode.example.cryptotestnetwallet
 
 import android.content.*
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
@@ -52,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         val words = sharedPref.getString(CoinKit.walletId,null)?.split(" ")
         Log.d(TAG, "Kit Builder words: $words")
         var serviceIntent = Intent(this, KitSyncService::class.java)
-        serviceIntent.putExtra("coin", 1)
         Log.d(TAG,"Starting Foreground Service")
         startForegroundService(serviceIntent)
         Log.d(TAG,"Service Component type: ${serviceIntent.component}")
