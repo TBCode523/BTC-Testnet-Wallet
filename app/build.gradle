@@ -52,7 +52,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'com.github.horizontalsystems:bitcoin-kit-android:master-SNAPSHOT'
-    implementation 'com.github.horizontalsystems:ethereum-kit-android:master-SNAPSHOT'
+    implementation 'com.github.horizontalsystems:ethereum-kit-android:0.4.0'
     implementation 'io.github.novacrypto:BIP39:2019.01.27'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
