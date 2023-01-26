@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         drawerLayout = findViewById(R.id.drawer)
         drawerNav = findViewById(R.id.drawer_nav)
+        drawerNav.itemIconTintList = null
         toggle = ActionBarDrawerToggle(this,drawerLayout,R.string.open,R.string.close)
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
@@ -66,14 +67,14 @@ class MainActivity : AppCompatActivity() {
             if(kitClicked != KitSyncService.coinKit?.label) {
                 when (it.itemId) {
                     R.id.tBTC -> {
-                        Toast.makeText(this, "Clicked on tBTC", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Loading tBTC...", Toast.LENGTH_SHORT).show()
                         stopService(serviceIntent)
                         serviceIntent = Intent(this, KitSyncService::class.java)
                         serviceIntent.putExtra("coin", 0)
                         startForegroundService(serviceIntent)
                     }
                     R.id.tLTC ->{
-                        Toast.makeText(this, "Clicked on tLTC", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Loading tLTC...", Toast.LENGTH_SHORT).show()
                         stopService(serviceIntent)
                         serviceIntent = Intent(this, KitSyncService::class.java)
                         serviceIntent.putExtra("coin", 1)
